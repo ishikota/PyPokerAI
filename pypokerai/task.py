@@ -14,7 +14,35 @@ table_break_threshold = 3
 initial_stack = 10000
 sb_amount = 25
 ante = 0
-blind_structure = {}  # TODO AJPC 2016 main tornament structure
+level_interval = 10
+blind_structure = {
+        level_interval*0 + 1 : { "ante": 0, "small_blind": 25 },  # LEVEL 1
+        level_interval*1 + 1 : { "ante": 0, "small_blind": 50 },
+        level_interval*2 + 1 : { "ante": 0, "small_blind": 75 },
+        level_interval*3 + 1 : { "ante": 0, "small_blind": 100 },
+        level_interval*4 + 1 : { "ante": 25, "small_blind": 100 },
+        level_interval*5 + 1 : { "ante": 25, "small_blind": 150 },
+        level_interval*6 + 1 : { "ante": 50, "small_blind": 200 },
+        level_interval*7 + 1 : { "ante": 50, "small_blind": 250 },
+        level_interval*8 + 1 : { "ante": 75, "small_blind": 300 },
+        level_interval*9 + 1 : { "ante": 100, "small_blind": 400 },
+        level_interval*10 + 1 : { "ante": 100, "small_blind": 600 },
+        level_interval*11 + 1 : { "ante": 200, "small_blind": 800 },
+        level_interval*12 + 1 : { "ante": 200, "small_blind": 1000 },
+        level_interval*13 + 1 : { "ante": 300, "small_blind": 1200 },
+        level_interval*14 + 1 : { "ante": 400, "small_blind": 1500 },
+        level_interval*15 + 1 : { "ante": 500, "small_blind": 2000 },
+        level_interval*16 + 1 : { "ante": 500, "small_blind": 2500 },
+        level_interval*17 + 1 : { "ante": 500, "small_blind": 3000 },
+        level_interval*18 + 1 : { "ante": 1000, "small_blind": 4000 },
+        level_interval*19 + 1 : { "ante": 1000, "small_blind": 6000 },
+        level_interval*20 + 1 : { "ante": 2000, "small_blind": 8000 },
+        level_interval*21 + 1 : { "ante": 3000, "small_blind": 10000 },
+        level_interval*22 + 1 : { "ante": 4000, "small_blind": 12000 },
+        level_interval*23 + 1 : { "ante": 5000, "small_blind": 15000 },
+        level_interval*24 + 1 : { "ante": 10000, "small_blind": 20000 },
+        level_interval*25 + 1 : { "ante": 20000, "small_blind": 30000 },  # LEVEL 26
+        }
 my_uuid = "uuid-0"
 my_name = "agent"
 players_info = {

@@ -1,6 +1,6 @@
 from mock import Mock
 from tests.base_unittest import BaseUnitTest
-from pypokerai.task import TexasHoldemTask, my_uuid, pick_me
+from pypokerai.task import TexasHoldemTask, my_uuid, pick_me, blind_structure
 from pypokerengine.engine.action_checker import ActionChecker
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 
@@ -117,5 +117,36 @@ class TaskTest(BaseUnitTest):
         others = [p for p in state["table"].seats.players if p.uuid != my_uuid]
         for player in others: player.stack = 0
         self.eq(10000, self.task.calculate_reward(state))
+
+    def test_blind_structure(self):
+        bs = blind_structure
+        def check(level, ante, sb):
+            self.eq(ante, bs[level]["ante"])
+            self.eq(sb, bs[level]["small_blind"])
+        check(11, 0, 50)
+        check(21, 0, 75)
+        check(31, 0, 100)
+        check(41, 25, 100)
+        check(51, 25, 150)
+        check(61, 50, 200)
+        check(71, 50, 250)
+        check(81, 75, 300)
+        check(91, 100, 400)
+        check(101, 100, 600)
+        check(111, 200, 800)
+        check(121, 200, 1000)
+        check(131, 300, 1200)
+        check(141, 400, 1500)
+        check(151, 500, 2000)
+        check(161, 500, 2500)
+        check(171, 500, 3000)
+        check(181, 1000, 4000)
+        check(191, 1000, 6000)
+        check(201, 2000, 8000)
+        check(211, 3000, 10000)
+        check(221, 4000, 12000)
+        check(231, 5000, 15000)
+        check(241, 10000, 20000)
+        check(251, 20000, 30000)
 
 

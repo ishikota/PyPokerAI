@@ -4,7 +4,7 @@ from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rat
 
 from pypokerai.task import FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
 
-def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action):
+def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
     f_stack = player_stack_to_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scalar
@@ -13,13 +13,13 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     next_player = next_player_to_scalar(round_state, my_uuid)
     sb_pos = sb_pos_to_scalar(round_state, my_uuid)
     street = street_to_scalar(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card)
+    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action):
+def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scaled_scalar
@@ -28,13 +28,13 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     next_player = next_player_to_scaled_scalar(round_state, my_uuid)
     sb_pos = sb_pos_to_scaled_scalar(round_state, my_uuid)
     street = street_to_scaled_scalar(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card)
+    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action):
+def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_onehot
     f_history = player_action_history_to_scaled_scalar
@@ -43,7 +43,7 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     next_player = next_player_to_onehot(round_state, my_uuid)
     sb_pos = sb_pos_to_onehot(round_state, my_uuid)
     street = street_to_onehot(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card)
+    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
@@ -119,11 +119,32 @@ def street_to_onehot(round_state):
     street = street_to_scalar(round_state)[0]
     return [1 if street == idx else 0 for idx in range(4)]
 
-def cards_to_scaled_scalar(round_state, hole_card, simulation_num=100):
+def cards_to_scaled_scalar(round_state, hole_card, algorithm, simulation_num=100, neuralnets=None):
+    if "simulation" == algorithm:
+        return cards_to_scaled_scalar_by_simulation(round_state, hole_card, simulation_num)
+    if "neuralnet" == algorithm:
+        return cards_to_scaled_scalar_by_neuralnet(round_state, hole_card, neuralnets)
+    else:
+        raise ValueError("Unexpected flg [ algorithm=%s ] received" % algorithm)
+
+def cards_to_scaled_scalar_by_simulation(round_state, hole_card, simulation_num):
     player_num = len(round_state["seats"])
     hole = gen_cards(hole_card)
     community = gen_cards(round_state["community_card"])
     return [estimate_hole_card_win_rate(simulation_num, player_num, hole, community)]
+
+def cards_to_scaled_scalar_by_neuralnet(round_state, hole_card, neuralnets):
+    hole = gen_cards(hole_card)
+    community = gen_cards(round_state["community_card"])
+    if "preflop" == round_state["street"]:
+        return [neuralnets[0].predict(hole)]
+    if "flop" == round_state["street"]:
+        return [neuralnets[1].predict(hole, community)]
+    if "turn" == round_state["street"]:
+        return [neuralnets[2].predict(hole, community)]
+    if "river" == round_state["street"]:
+        return [neuralnets[3].predict(hole, community)]
+    raise Exception("Unexpected street [ %s ] received" % round_state["street"])
 
 def seats_to_vector(round_state, f_stack, f_state, f_history):
     player_num = len(round_state["seats"])

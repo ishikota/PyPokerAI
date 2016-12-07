@@ -4,7 +4,7 @@ import pypokerai.task as T
 from nose.tools import raises
 from mock import patch
 from tests.base_unittest import BaseUnitTest
-from tests.sample_data import round_state1
+from tests.sample_data import round_state1, round_state2
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 
 class FeaturesTest(BaseUnitTest):
@@ -116,6 +116,13 @@ class FeaturesTest(BaseUnitTest):
     def xtest_cards_to_scaled_scalar(self):
         with patch("pypokerengine.utils.card_utils.estimate_hole_card_win_rate", side_effect=[0.1]) as f:
             self.eq(0.1, F.cards_to_scaled_scalar(round_state1, ["S2", "D4"])[0])
+
+    def xtest_cards_to_scaled_scalar_by_neuralnet(self):
+        from holecardhandicapper.model.neuralnet import Neuralnet
+        nns = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
+        [nn.compile() for nn in nns]
+        self.almosteq(0.56, F.cards_to_scaled_scalar(round_state1, ["S2", "D4"], "neuralnet", neuralnets=nns)[0], 0.01)
+        self.almosteq(0.20, F.cards_to_scaled_scalar(round_state2, ["S2", "D4"], "neuralnet", neuralnets=nns)[0], 0.01)
 
     def test_player_stack_to_scalar(self):
         self.eq(80, F.player_stack_to_scalar(round_state1, 0)[0])

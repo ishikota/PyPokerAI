@@ -2,7 +2,9 @@ from pypokerengine.engine.poker_constants import PokerConstants as Const
 from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rate
 
-def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture):
+from pypokerai.task import FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
+
+def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action):
     f_stack = player_stack_to_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scalar
@@ -14,9 +16,10 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture):
     cards = cards_to_scaled_scalar(round_state, hole_card)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scalar(round_state)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
+    action = action_to_onehot(action)
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture):
+def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scaled_scalar
@@ -28,9 +31,10 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     cards = cards_to_scaled_scalar(round_state, hole_card)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
+    action = action_to_onehot(action)
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture):
+def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_onehot
     f_history = player_action_history_to_scaled_scalar
@@ -42,7 +46,8 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture):
     cards = cards_to_scaled_scalar(round_state, hole_card)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
+    action = action_to_onehot(action)
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
 
 def round_count_to_scalar(round_state):
@@ -182,6 +187,11 @@ def pot_to_scaled_scalar(round_state):
     stack_sum = sum([player_stack_to_scalar(round_state, i)[0] for i in range(player_num)])
     pot_amount = pot_to_scalar(round_state)[0]
     return [1.0 * pot_amount / (pot_amount + stack_sum)]
+
+def action_to_onehot(action):
+    actions = [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE]
+    idx = actions.index(action["name"])
+    return [1 if idx==i else 0 for i in range(len(actions))]
 
 def _measure_distance_to_me(round_state, my_uuid, start_pos):
     player_num = len(round_state["seats"])

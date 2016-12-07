@@ -1,4 +1,5 @@
 import pypokerai.features as F
+import pypokerai.task as T
 
 from nose.tools import raises
 from mock import patch
@@ -168,18 +169,30 @@ class FeaturesTest(BaseUnitTest):
     def test_pot_to_scaled_scalar(self):
         self.almosteq(0.33, F.pot_to_scaled_scalar(round_state1)[0], 0.01)
 
+    def test_action_to_onehot(self):
+        self.eq([1,0,0,0,0,0], F.action_to_onehot(T.gen_fold_action()))
+        self.eq([0,1,0,0,0,0], F.action_to_onehot(T.gen_call_action(10)))
+        self.eq([0,0,1,0,0,0], F.action_to_onehot(T.gen_min_raise_action(10)))
+        self.eq([0,0,0,1,0,0], F.action_to_onehot(T.gen_double_raise_action(10)))
+        self.eq([0,0,0,0,1,0], F.action_to_onehot(T.gen_triple_raise_action(10)))
+        self.eq([0,0,0,0,0,1], F.action_to_onehot(T.gen_max_raise_action(10)))
+
     def test_construct_scalar_features(self):
+        action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure)
-        self.size(16, vec)
+        vec = F.construct_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        self.size(22, vec)
 
     def test_construct_scaled_scalar_features(self):
+        action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure)
-        self.size(16, vec)
+        vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        self.size(22, vec)
 
     def test_construct_onehot_features(self):
+        action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure)
-        self.size(32, vec)
+        vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        self.size(38, vec)
+
 

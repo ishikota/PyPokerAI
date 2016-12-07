@@ -25,7 +25,7 @@ class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
         hole_card = [p for p in state["table"].seats.players if p.uuid==my_uuid][0].hole_card
         hole_str = [str(card) for card in hole_card]
         round_state = DataEncoder.encode_round_state(state)
-        features = construct_scaled_scalar_features(round_state, my_uuid, hole_str, blind_structure)
+        features = construct_scaled_scalar_features(round_state, my_uuid, hole_str, blind_structure, action)
         return state
 
     def approx_predict_value(self, features):

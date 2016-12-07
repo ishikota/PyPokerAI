@@ -4,7 +4,7 @@ from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rat
 
 from pypokerai.task import FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
 
-def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
+def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scalar
@@ -13,13 +13,13 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     next_player = next_player_to_scalar(round_state, my_uuid)
     sb_pos = sb_pos_to_scalar(round_state, my_uuid)
     street = street_to_scalar(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
+    cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
+def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scaled_scalar
@@ -28,13 +28,13 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     next_player = next_player_to_scaled_scalar(round_state, my_uuid)
     sb_pos = sb_pos_to_scaled_scalar(round_state, my_uuid)
     street = street_to_scaled_scalar(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
+    cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
-def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None):
+def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_onehot
     f_history = player_action_history_to_scaled_scalar
@@ -43,7 +43,7 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     next_player = next_player_to_onehot(round_state, my_uuid)
     sb_pos = sb_pos_to_onehot(round_state, my_uuid)
     street = street_to_onehot(round_state)
-    cards = cards_to_scaled_scalar(round_state, hole_card, "simulation", neuralnets=neuralnets)
+    cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)

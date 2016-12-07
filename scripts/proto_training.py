@@ -18,14 +18,21 @@ from kyoka.policy import EpsilonGreedyPolicy
 
 from pypokerengine.engine.data_encoder import DataEncoder
 
+from holecardhandicapper.model.neuralnet import Neuralnet
+
 class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
+
+    def setup(self):
+        self.handicappers = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
+        [nn.compile() for nn in self.handicappers]
 
     def construct_features(self, state, action):
         my_uuid = state["table"].seats.players[state["next_player"]].uuid
         hole_card = [p for p in state["table"].seats.players if p.uuid==my_uuid][0].hole_card
         hole_str = [str(card) for card in hole_card]
         round_state = DataEncoder.encode_round_state(state)
-        features = construct_scaled_scalar_features(round_state, my_uuid, hole_str, blind_structure, action)
+        features = construct_scaled_scalar_features(round_state, my_uuid, hole_str,
+                blind_structure, action, neuralnets=self.handicappers)
         return state
 
     def approx_predict_value(self, features):

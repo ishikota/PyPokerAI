@@ -187,19 +187,19 @@ class FeaturesTest(BaseUnitTest):
     def test_construct_scalar_features(self):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        vec = F.construct_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(22, vec)
 
     def test_construct_scaled_scalar_features(self):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(22, vec)
 
     def test_construct_onehot_features(self):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
-        vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action)
+        vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(38, vec)
 
 

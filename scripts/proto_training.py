@@ -11,42 +11,36 @@ sys.path.append(src_path)
 
 from pypokerai.task import TexasHoldemTask, blind_structure
 from pypokerai.features import construct_scalar_features, construct_scaled_scalar_features, construct_onehot_features
+from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
+        LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
 
-from kyoka.algorithm.montecarlo import MonteCarlo,\
-        MonteCarloTabularActionValueFunction, MonteCarloApproxActionValueFunction
+from kyoka.algorithm.montecarlo import MonteCarlo, MonteCarloApproxActionValueFunction
+from kyoka.algorithm.q_learning import QLearning, QLearningApproxActionValueFunction
+from kyoka.algorithm.sarsa import Sarsa, SarsaApproxActionValueFunction
 from kyoka.policy import EpsilonGreedyPolicy
 
-from pypokerengine.engine.data_encoder import DataEncoder
 
-from holecardhandicapper.model.neuralnet import Neuralnet
-
-class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
+class ApproxActionValueFunction(QLearningApproxActionValueFunction):
 
     def setup(self):
-        self.handicappers = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
-        [nn.compile() for nn in self.handicappers]
+        self.delegate = LinearModelOnehotFeaturesValueFunction(blind_structure)
+        self.delegate.setup()
 
     def construct_features(self, state, action):
-        my_uuid = state["table"].seats.players[state["next_player"]].uuid
-        hole_card = [p for p in state["table"].seats.players if p.uuid==my_uuid][0].hole_card
-        hole_str = [str(card) for card in hole_card]
-        round_state = DataEncoder.encode_round_state(state)
-        features = construct_scaled_scalar_features(round_state, my_uuid, hole_str,
-                blind_structure, action, neuralnets=self.handicappers)
-        return state
+        return self.delegate.construct_features(state, action)
 
     def approx_predict_value(self, features):
-        return 0
+        return self.delegate.approx_predict_value(features)
 
     def approx_backup(self, features, backup_target, alpha):
-        pass
+        self.delegate.approx_backup(features, backup_target, alpha)
 
 TEST_LENGTH = 10000
 value_func = ApproxActionValueFunction()
 task = TexasHoldemTask()
 task.set_value_function(value_func)
 policy = EpsilonGreedyPolicy(eps=0.1)
-algorithm = MonteCarlo(gamma=0.01)
+algorithm = QLearning(gamma=0.99)
 algorithm.setup(task, policy, value_func)
 import pdb, traceback, sys
 try:

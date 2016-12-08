@@ -44,7 +44,7 @@ class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
 TEST_LENGTH = 10000
 value_func = ApproxActionValueFunction()
 task = TexasHoldemTask()
-task.value_function = value_func
+task.set_value_function(value_func)
 policy = EpsilonGreedyPolicy(eps=0.1)
 algorithm = MonteCarlo(gamma=0.01)
 algorithm.setup(task, policy, value_func)

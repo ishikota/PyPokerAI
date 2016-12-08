@@ -69,6 +69,9 @@ class TexasHoldemTask(BaseTask):
         for uuid in players_info:
             self.emulator.register_player(uuid, DummyPlayer())
 
+    def set_value_function(self, value_function):
+        self.value_function = value_function
+
     def generate_initial_state(self):
         clear_state = self.emulator.generate_initial_game_state(players_info)
         state, _events = self.emulator.start_new_round(clear_state)

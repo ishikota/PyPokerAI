@@ -1,5 +1,6 @@
 import os
 from mock import Mock
+from nose.tools import raises
 
 from tests.base_unittest import BaseUnitTest
 
@@ -10,6 +11,10 @@ class ResetOpponentValueFunctionTest(BaseUnitTest):
 
     def setUp(self):
         self.task = TexasHoldemTask()
+
+    @raises(ValueError)
+    def test_error_when_unexpected_flg_passed(self):
+        callback = ResetOpponentValueFunction(checkpoint_dir_path(), 10, "dummy", "hoge")
 
     def test_after_update(self):
         generator = lambda : Mock()

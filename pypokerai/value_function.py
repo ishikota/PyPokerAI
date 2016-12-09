@@ -1,12 +1,16 @@
+import os
 import pypokerai.features as F
 import numpy as np
-from keras.models import Sequential
+from keras.models import Sequential, model_from_json
 from keras.layers.core import Dense
 from kyoka.value_function import BaseApproxActionValueFunction
 from holecardhandicapper.model.neuralnet import Neuralnet
 from pypokerengine.engine.data_encoder import DataEncoder
 
 class BasePokerActionValueFunction(BaseApproxActionValueFunction):
+
+    MODEL_ARCHITECTURE_FILE_PATH = "model_architecture.json"
+    MODEL_WEIGHTS_FILE_PATH = "model_weights.h5"
 
     def __init__(self, blind_structure):
         self.blind_structure = blind_structure
@@ -36,6 +40,20 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
     def construct_poker_features(
             self, state, action, round_staet, my_uuid, hole_str, handicappers, blind_structure):
         raise NotImplementedError("[construct_poker_features] method is not implemented")
+
+    def save(self, save_dir_path):
+        json_string = self.model.to_json()
+        with open(os.path.join(save_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "wb") as f:
+            f.write(json_string)
+        self.model.save_weights(os.path.join(save_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
+
+    def load(self, load_dir_path):
+        with open(os.path.join(load_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "wb") as f:
+            json_string = f.read()
+        model = model_from_json(json_string)
+        model.load_weights(os.path.join(load_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
+        self.model = model
+
 
 class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
 

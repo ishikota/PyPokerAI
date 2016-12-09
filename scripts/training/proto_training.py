@@ -46,6 +46,12 @@ class ApproxActionValueFunction(QLearningApproxActionValueFunction):
     def approx_backup(self, features, backup_target, alpha):
         self.delegate.approx_backup(features, backup_target, alpha)
 
+    def save(self, save_dir_path):
+        self.delegate.save(save_dir_path)
+
+    def load(self, load_dir_path):
+        self.delegate.load(load_dir_path)
+
 TEST_LENGTH = 10000
 
 # Setup algorithm

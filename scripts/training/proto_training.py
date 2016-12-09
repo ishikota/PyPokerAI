@@ -29,7 +29,7 @@ from kyoka.callback import LearningRecorder, ManualInterruption
 from pypokerai.task import TexasHoldemTask, blind_structure
 from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
         LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
-from pypokerai.callback import ResetOpponentValueFunction
+from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder
 
 
 class ApproxActionValueFunction(QLearningApproxActionValueFunction):
@@ -82,6 +82,9 @@ def value_func_generator():
     return f
 reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator)
 
-callbacks = [learning_recorder, manual_interruption, reset_opponent_value_func]
+score_output_path = os.path.join(os.path.dirname(__file__), "initial_value_transition.csv")
+initial_value_scorer = InitialStateValueRecorder(score_output_path)
+
+callbacks = [learning_recorder, manual_interruption, reset_opponent_value_func, initial_value_scorer]
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
 

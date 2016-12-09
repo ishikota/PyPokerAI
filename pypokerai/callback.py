@@ -1,8 +1,10 @@
 import os
 import re
 import random
+import csv
 
 from kyoka.callback import BaseCallback
+from kyoka.policy import choose_best_action
 
 class ResetOpponentValueFunction(BaseCallback):
 
@@ -67,4 +69,32 @@ class ResetOpponentValueFunction(BaseCallback):
         value_func = self.generator_method()
         value_func.load(load_dir_path)
         return value_func
+
+class InitialStateValueRecorder(BaseCallback):
+
+    def __init__(self, score_file_path):
+        self.score_file_path = score_file_path
+        self.score_holder = []
+
+    def before_gpi_start(self, task, value_function):
+        value = self._predict_value_of_initial_state(task, value_function)
+        self.log("Value of initial state is [ %s ]" % value)
+        self.score_holder.append(value)
+
+    def after_update(self, iteration_count, task, value_function):
+        value = self._predict_value_of_initial_state(task, value_function)
+        self.log("Value of initial state is [ %s ]" % value)
+        self.score_holder.append(value)
+
+    def after_gpi_finish(self, task, value_function):
+        with open(self.score_file_path, "wb") as f:
+            writer = csv.writer(f, lineterminator="\n")
+            writer.writerow(self.score_holder)
+        self.log("Score is saved on [ %s ]" % self.score_file_path)
+
+
+    def _predict_value_of_initial_state(self, task, value_function):
+        state = task.generate_initial_state()
+        action = choose_best_action(task, value_function, state)
+        return value_function.predict_value(state, action)
 

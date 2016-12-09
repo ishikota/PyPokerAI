@@ -69,7 +69,7 @@ class TexasHoldemTask(BaseTask):
         self.opponent_value_functions = {}
         for uuid in players_info:
             self.emulator.register_player(uuid, DummyPlayer())
-            self.opponent_value_functions[uuid] = None
+            if uuid != my_uuid: self.opponent_value_functions[uuid] = None
 
     def set_opponent_value_functions(self, value_functions):
         assert len(value_functions) == 9

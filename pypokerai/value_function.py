@@ -44,17 +44,10 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         raise NotImplementedError("[construct_poker_features] method is not implemented")
 
     def save(self, save_dir_path):
-        json_string = self.model.to_json()
-        with open(os.path.join(save_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "wb") as f:
-            f.write(json_string)
         self.model.save_weights(os.path.join(save_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
 
     def load(self, load_dir_path):
-        with open(os.path.join(load_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "rb") as f:
-            json_string = f.read()
-        model = model_from_json(json_string)
-        model.load_weights(os.path.join(load_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
-        self.model = model
+        self.model.load_weights(os.path.join(load_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
 
 
 class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):

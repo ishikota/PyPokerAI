@@ -4,20 +4,31 @@
 import os
 import sys
 
-root = os.path.join(os.path.dirname(__file__), "..")
+root = os.path.join(os.path.dirname(__file__), "..", "..")
 src_path = os.path.join(root, "pypokerai")
 sys.path.append(root)
 sys.path.append(src_path)
 
-from pypokerai.task import TexasHoldemTask, blind_structure
-from pypokerai.features import construct_scalar_features, construct_scaled_scalar_features, construct_onehot_features
-from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
-        LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
+# Prepare method to start pdb when crashed
+import pdb, traceback, sys
+def run_insecure_method(f, args):
+    try:
+        f(*args)
+    except:
+        type, value, tb = sys.exc_info()
+        traceback.print_exc()
+        pdb.post_mortem(tb)
+
 
 from kyoka.algorithm.montecarlo import MonteCarlo, MonteCarloApproxActionValueFunction
 from kyoka.algorithm.q_learning import QLearning, QLearningApproxActionValueFunction
 from kyoka.algorithm.sarsa import Sarsa, SarsaApproxActionValueFunction
 from kyoka.policy import EpsilonGreedyPolicy
+from kyoka.callback import LearningRecorder, ManualInterruption
+
+from pypokerai.task import TexasHoldemTask, blind_structure
+from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
+        LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
 
 
 class ApproxActionValueFunction(QLearningApproxActionValueFunction):
@@ -36,16 +47,23 @@ class ApproxActionValueFunction(QLearningApproxActionValueFunction):
         self.delegate.approx_backup(features, backup_target, alpha)
 
 TEST_LENGTH = 10000
+
+# Setup algorithm
 value_func = ApproxActionValueFunction()
 task = TexasHoldemTask()
 task.set_value_function(value_func)
-policy = EpsilonGreedyPolicy(eps=0.1)
+policy = EpsilonGreedyPolicy(eps=0.99)
+policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)
 algorithm = QLearning(gamma=0.99)
 algorithm.setup(task, policy, value_func)
-import pdb, traceback, sys
-try:
-    algorithm.run_gpi(TEST_LENGTH)
-except:
-    type, value, tb = sys.exc_info()
-    traceback.print_exc()
-    pdb.post_mortem(tb)
+
+# Setup callbacks
+save_dir_path = os.path.join(os.path.dirname(__file__), "checkpoint")
+learning_recorder = LearningRecorder(algorithm, save_dir_path, 10)
+
+monitor_file_path = os.path.join(os.path.dirname(__file__), "stop.txt")
+manual_interruption = ManualInterruption(monitor_file_path)
+
+callbacks = [learning_recorder, manual_interruption]
+run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
+

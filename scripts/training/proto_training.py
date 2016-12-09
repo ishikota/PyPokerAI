@@ -57,7 +57,7 @@ TEST_LENGTH = 10000
 # Setup algorithm
 value_func = ApproxActionValueFunction()
 task = TexasHoldemTask()
-task.set_value_function(value_func)
+task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)
 algorithm = QLearning(gamma=0.99)

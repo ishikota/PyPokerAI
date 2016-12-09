@@ -15,7 +15,7 @@ class TaskTest(BaseUnitTest):
                 return 0
         value_func = Mock()
         value_func.predict_value.side_effect = recommend_fold
-        self.task.value_function = value_func
+        self.task.set_opponent_value_functions([value_func]*9)
 
     def test_generate_initial_state(self):
         state = self.task.generate_initial_state()
@@ -73,7 +73,7 @@ class TaskTest(BaseUnitTest):
                 return 0
         value_func = Mock()
         value_func.predict_value.side_effect = recommend_call
-        self.task.value_function = value_func
+        self.task.set_opponent_value_functions([value_func]*9)
 
         state = self.task.generate_initial_state()
         actions = self.task.generate_possible_actions(state)

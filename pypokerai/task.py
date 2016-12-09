@@ -66,17 +66,22 @@ class TexasHoldemTask(BaseTask):
         self.emulator = Emulator()
         self.emulator.set_game_rule(nb_player, max_round, sb_amount, ante)
         self.emulator.set_blind_structure(blind_structure)
+        self.opponent_value_functions = {}
         for uuid in players_info:
             self.emulator.register_player(uuid, DummyPlayer())
+            self.opponent_value_functions[uuid] = None
 
-    def set_value_function(self, value_function):
-        self.value_function = value_function
+    def set_opponent_value_functions(self, value_functions):
+        assert len(value_functions) == 9
+        opponent_uuids = [uuid for uuid in self.opponent_value_functions if uuid != my_uuid]
+        for uuid, value_function in zip(opponent_uuids, value_functions):
+            self.opponent_value_functions[uuid] = value_function
 
     def generate_initial_state(self):
         clear_state = self.emulator.generate_initial_game_state(players_info)
         state, _events = self.emulator.start_new_round(clear_state)
         while not self._check_my_turn(state):
-            action, amount = self._choose_opponent_action(state, self.value_function)
+            action, amount = self._choose_opponent_action(state)
             state, _events = self.emulator.apply_action(state, action, amount)
         return state
 
@@ -95,7 +100,7 @@ class TexasHoldemTask(BaseTask):
         if state["street"] == Const.Street.FINISHED:
             state, _events = self.emulator.start_new_round(state)
         while not self._check_my_turn(state) and not self.is_terminal_state(state):
-            action, amount = self._choose_opponent_action(state, self.value_function)
+            action, amount = self._choose_opponent_action(state)
             state, _events = self.emulator.apply_action(state, action, amount)
             if state["street"] == Const.Street.FINISHED:
                 state, _events = self.emulator.start_new_round(state)
@@ -105,7 +110,10 @@ class TexasHoldemTask(BaseTask):
         players = state["table"].seats.players
         return state["next_player"] != "not_found" and my_uuid == players[state["next_player"]].uuid
 
-    def _choose_opponent_action(self, state, value_function):
+    def _choose_opponent_action(self, state):
+        players = state["table"].seats.players
+        opponent_uuid = players[state["next_player"]].uuid
+        value_function = self.opponent_value_functions[opponent_uuid]
         action_info = choose_best_action(self, value_function, state)
         return action_info["action"], action_info["amount"]
 

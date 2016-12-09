@@ -29,12 +29,17 @@ from kyoka.callback import LearningRecorder, ManualInterruption
 from pypokerai.task import TexasHoldemTask, blind_structure
 from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
         LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
+from pypokerai.callback import ResetOpponentValueFunction
 
 
 class ApproxActionValueFunction(QLearningApproxActionValueFunction):
 
+    def __init__(self, handicappers=None):
+        super(QLearningApproxActionValueFunction, self).__init__()
+        self._handicappers = handicappers
+
     def setup(self):
-        self.delegate = LinearModelOnehotFeaturesValueFunction(blind_structure)
+        self.delegate = LinearModelOnehotFeaturesValueFunction(blind_structure, self._handicappers)
         self.delegate.setup()
 
     def construct_features(self, state, action):
@@ -70,6 +75,13 @@ learning_recorder = LearningRecorder(algorithm, save_dir_path, 10)
 monitor_file_path = os.path.join(os.path.dirname(__file__), "stop.txt")
 manual_interruption = ManualInterruption(monitor_file_path)
 
-callbacks = [learning_recorder, manual_interruption]
+reset_interval = 15
+def value_func_generator():
+    f = ApproxActionValueFunction(value_func.delegate.handicappers)
+    f.setup()
+    return f
+reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator)
+
+callbacks = [learning_recorder, manual_interruption, reset_opponent_value_func]
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
 

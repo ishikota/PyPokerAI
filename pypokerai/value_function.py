@@ -12,13 +12,15 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
     MODEL_ARCHITECTURE_FILE_PATH = "model_architecture.json"
     MODEL_WEIGHTS_FILE_PATH = "model_weights.h5"
 
-    def __init__(self, blind_structure):
+    def __init__(self, blind_structure, handicappers=None):
         self.blind_structure = blind_structure
+        self.handicappers = handicappers
 
     def setup(self):
         self.model = self.build_model()
-        self.handicappers = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
-        [nn.compile() for nn in self.handicappers]
+        if not self.handicappers:
+            self.handicappers = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
+            [nn.compile() for nn in self.handicappers]
 
     def construct_features(self, state, action):
         my_uuid = state["table"].seats.players[state["next_player"]].uuid
@@ -48,7 +50,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         self.model.save_weights(os.path.join(save_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
 
     def load(self, load_dir_path):
-        with open(os.path.join(load_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "wb") as f:
+        with open(os.path.join(load_dir_path, self.MODEL_ARCHITECTURE_FILE_PATH), "rb") as f:
             json_string = f.read()
         model = model_from_json(json_string)
         model.load_weights(os.path.join(load_dir_path, self.MODEL_WEIGHTS_FILE_PATH))

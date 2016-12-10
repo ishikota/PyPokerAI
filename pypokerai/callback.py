@@ -124,11 +124,12 @@ class EpisodeSampler(BaseCallback):
             final_reward = episode[-1][3]
             self.log("Episode finished at %d round with reward = %s (took %s sec)" %
                     (round_count, final_reward, calc_time))
-            self.write_action_log_to_file(iteration_count, episode, self.my_uuid)
+            self.write_action_log_to_file(iteration_count, episode, self.my_uuid, final_reward)
 
-    def write_action_log_to_file(self, iteration_count, episode, my_uuid):
-        header_divider = "*"*20
-        header = "\n".join([header_divider, "After %d iteration" % iteration_count, header_divider])
+    def write_action_log_to_file(self, iteration_count, episode, my_uuid, final_reward):
+        header_divider = "*"*40
+        header_content = "After %d iteration (final reward = %d)" % (iteration_count, final_reward)
+        header = "\n".join([header_divider, header_content, header_divider])
         action_logs = [self._visualize_action_log(e) for e in episode]
         action_logs = action_logs
         logs = header + "\n" + "\n\n".join(action_logs) + "\n\n\n"

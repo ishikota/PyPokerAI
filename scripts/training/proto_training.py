@@ -65,6 +65,10 @@ TRAINING_TITLE = "proto_run_at_%s" % time_stamp
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", TRAINING_TITLE)
 os.mkdir(OUTPUT_DIR)
 
+# copy training script to output dir
+script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
+shutil.copyfile(__file__, script_output_path)
+
 TEST_LENGTH = 10000
 
 # Setup algorithm
@@ -107,8 +111,4 @@ episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_u
 callbacks.append(episode_sampler)
 
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
-
-# copy training script to output dir
-script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
-shutil.copyfile(__file__, script_output_path)
 

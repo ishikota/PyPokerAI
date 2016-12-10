@@ -62,7 +62,8 @@ pick_me = lambda state: [p for p in state["table"].seats.players if p.uuid == my
 
 class TexasHoldemTask(BaseTask):
 
-    def __init__(self):
+    def __init__(self, scale_reward=False):
+        self.scale_reward = scale_reward
         self.emulator = Emulator()
         self.emulator.set_game_rule(nb_player, max_round, sb_amount, ante)
         self.emulator.set_blind_structure(blind_structure)
@@ -136,7 +137,10 @@ class TexasHoldemTask(BaseTask):
 
     def calculate_reward(self, state):
         if self.is_terminal_state(state):
-            return pick_me(state).stack
+            if self.scale_reward:
+                return 1.0 * pick_me(state).stack / (nb_player * initial_stack)
+            else:
+                return pick_me(state).stack
         else:
             return 0
 

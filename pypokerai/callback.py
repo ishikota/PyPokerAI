@@ -128,7 +128,7 @@ class EpisodeSampler(BaseCallback):
 
     def write_action_log_to_file(self, iteration_count, episode, my_uuid, final_reward):
         header_divider = "*"*40
-        header_content = "After %d iteration (final reward = %d)" % (iteration_count, final_reward)
+        header_content = "After %d iteration (final reward = %s)" % (iteration_count, final_reward)
         header = "\n".join([header_divider, header_content, header_divider])
         action_logs = [self._visualize_action_log(e) for e in episode]
         action_logs = action_logs

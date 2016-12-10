@@ -69,17 +69,17 @@ TEST_LENGTH = 10000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = TexasHoldemTask()
+task = TexasHoldemTask(scale_reward=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)
-algorithm = QLearning(gamma=0.999)
+algorithm = QLearning(gamma=0.99)
 algorithm.setup(task, policy, value_func)
 
 # Setup callbacks
 callbacks = []
 
-save_interval = 10
+save_interval = 1000
 save_dir_path = os.path.join(OUTPUT_DIR, "checkpoint")
 os.mkdir(save_dir_path)
 learning_recorder = LearningRecorder(algorithm, save_dir_path, save_interval)
@@ -89,7 +89,7 @@ monitor_file_path = os.path.join(OUTPUT_DIR, "stop.txt")
 manual_interruption = ManualInterruption(monitor_file_path)
 callbacks.append(manual_interruption)
 
-reset_interval = 10
+reset_interval = 1000
 def value_func_generator():
     f = ApproxActionValueFunction(value_func.delegate.handicappers)
     f.setup()
@@ -102,7 +102,7 @@ initial_value_scorer = InitialStateValueRecorder(score_output_path)
 callbacks.append(initial_value_scorer)
 
 episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
-episode_sample_interval = 10
+episode_sample_interval = 1000
 episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
 callbacks.append(episode_sampler)
 

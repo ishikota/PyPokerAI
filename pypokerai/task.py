@@ -126,9 +126,9 @@ class TexasHoldemTask(BaseTask):
         actions = [gen_fold_action(), gen_call_action(action_info[1]["amount"])]
         if min_raise_amount != -1:
             actions.append(gen_min_raise_action(min_raise_amount))
-        if min_raise_amount*2 < max_raise_amount:
+        if min_raise_amount != -1 and min_raise_amount*2 < max_raise_amount:
             actions.append(gen_double_raise_action(min_raise_amount*2))
-        if min_raise_amount*3 < max_raise_amount:
+        if min_raise_amount != -1 and min_raise_amount*3 < max_raise_amount:
             actions.append(gen_triple_raise_action(min_raise_amount*3))
         if max_raise_amount != -1:
             actions.append(gen_max_raise_action(max_raise_amount))

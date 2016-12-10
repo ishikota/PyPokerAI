@@ -6,3 +6,5 @@
 .pypirc
 dist
 build
+scripts/training/results/*
+!scripts/training/results/.gitkeep

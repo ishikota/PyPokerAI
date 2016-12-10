@@ -19,6 +19,8 @@ def run_insecure_method(f, args):
         traceback.print_exc()
         pdb.post_mortem(tb)
 
+import shutil
+from datetime import datetime
 
 from kyoka.algorithm.montecarlo import MonteCarlo, MonteCarloApproxActionValueFunction
 from kyoka.algorithm.q_learning import QLearning, QLearningApproxActionValueFunction
@@ -57,6 +59,12 @@ class ApproxActionValueFunction(QLearningApproxActionValueFunction):
     def load(self, load_dir_path):
         self.delegate.load(load_dir_path)
 
+# Setup directory to output learning results
+time_stamp = datetime.now().strftime('%m%d_%H_%M_%S')
+TRAINING_TITLE = "proto_run_at_%s" % time_stamp
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", TRAINING_TITLE)
+os.mkdir(OUTPUT_DIR)
+
 TEST_LENGTH = 10000
 
 # Setup algorithm
@@ -65,20 +73,23 @@ task = TexasHoldemTask()
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)
-algorithm = QLearning(gamma=0.99)
+algorithm = QLearning(gamma=0.999)
 algorithm.setup(task, policy, value_func)
 
 # Setup callbacks
 callbacks = []
-save_dir_path = os.path.join(os.path.dirname(__file__), "checkpoint")
-learning_recorder = LearningRecorder(algorithm, save_dir_path, 10)
+
+save_interval = 10
+save_dir_path = os.path.join(OUTPUT_DIR, "checkpoint")
+os.mkdir(save_dir_path)
+learning_recorder = LearningRecorder(algorithm, save_dir_path, save_interval)
 callbacks.append(learning_recorder)
 
-monitor_file_path = os.path.join(os.path.dirname(__file__), "stop.txt")
+monitor_file_path = os.path.join(OUTPUT_DIR, "stop.txt")
 manual_interruption = ManualInterruption(monitor_file_path)
 callbacks.append(manual_interruption)
 
-reset_interval = 15
+reset_interval = 10
 def value_func_generator():
     f = ApproxActionValueFunction(value_func.delegate.handicappers)
     f.setup()
@@ -86,14 +97,18 @@ def value_func_generator():
 reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator)
 callbacks.append(reset_opponent_value_func)
 
-score_output_path = os.path.join(os.path.dirname(__file__), "initial_value_transition.csv")
+score_output_path = os.path.join(OUTPUT_DIR, "initial_value_transition.csv")
 initial_value_scorer = InitialStateValueRecorder(score_output_path)
 callbacks.append(initial_value_scorer)
 
-episode_log_path = os.path.join(os.path.dirname(__file__), "episode_log.txt")
+episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 10
 episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
 callbacks.append(episode_sampler)
 
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
+
+# copy training script to output dir
+script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
+shutil.copyfile(__file__, script_output_path)
 

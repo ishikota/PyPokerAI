@@ -26,10 +26,10 @@ from kyoka.algorithm.sarsa import Sarsa, SarsaApproxActionValueFunction
 from kyoka.policy import EpsilonGreedyPolicy
 from kyoka.callback import LearningRecorder, ManualInterruption
 
-from pypokerai.task import TexasHoldemTask, blind_structure
+from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
 from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
         LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
-from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder
+from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder, EpisodeSampler
 
 
 class ApproxActionValueFunction(QLearningApproxActionValueFunction):
@@ -69,11 +69,14 @@ algorithm = QLearning(gamma=0.99)
 algorithm.setup(task, policy, value_func)
 
 # Setup callbacks
+callbacks = []
 save_dir_path = os.path.join(os.path.dirname(__file__), "checkpoint")
 learning_recorder = LearningRecorder(algorithm, save_dir_path, 10)
+callbacks.append(learning_recorder)
 
 monitor_file_path = os.path.join(os.path.dirname(__file__), "stop.txt")
 manual_interruption = ManualInterruption(monitor_file_path)
+callbacks.append(manual_interruption)
 
 reset_interval = 15
 def value_func_generator():
@@ -81,10 +84,16 @@ def value_func_generator():
     f.setup()
     return f
 reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator)
+callbacks.append(reset_opponent_value_func)
 
 score_output_path = os.path.join(os.path.dirname(__file__), "initial_value_transition.csv")
 initial_value_scorer = InitialStateValueRecorder(score_output_path)
+callbacks.append(initial_value_scorer)
 
-callbacks = [learning_recorder, manual_interruption, reset_opponent_value_func, initial_value_scorer]
+episode_log_path = os.path.join(os.path.dirname(__file__), "episode_log.txt")
+episode_sample_interval = 10
+episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
+callbacks.append(episode_sampler)
+
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
 

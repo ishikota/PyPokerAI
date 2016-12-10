@@ -2,9 +2,14 @@ import os
 import re
 import random
 import csv
+import time
 
 from kyoka.callback import BaseCallback
-from kyoka.policy import choose_best_action
+from kyoka.policy import GreedyPolicy, choose_best_action
+from kyoka.algorithm.rl_algorithm import generate_episode
+from pypokerengine.utils.visualize_utils import visualize_declare_action
+from pypokerengine.engine.data_encoder import DataEncoder
+from pypokerengine.engine.action_checker import ActionChecker
 
 class ResetOpponentValueFunction(BaseCallback):
 
@@ -97,4 +102,49 @@ class InitialStateValueRecorder(BaseCallback):
         state = task.generate_initial_state()
         action = choose_best_action(task, value_function, state)
         return value_function.predict_value(state, action)
+
+class EpisodeSampler(BaseCallback):
+
+    def __init__(self, sample_interval, log_file_path, my_uuid):
+        self.sample_interval = sample_interval
+        self.log_fpath = log_file_path
+        self.greedy_policy = GreedyPolicy()
+        self.my_uuid = my_uuid
+
+    def before_gpi_start(self, tack, value_function):
+        self.log("Sample episode after each %d iteration and log it on [ %s ]"
+                % (self.sample_interval, self.log_fpath))
+
+    def after_update(self, iteration_count, task, value_function):
+        if iteration_count % self.sample_interval == 0:
+            st = time.time()
+            episode = generate_episode(task, self.greedy_policy, value_function)
+            calc_time = time.time() - st
+            round_count = episode[-1][2]["round_count"]
+            final_reward = episode[-1][3]
+            self.log("Episode finished at %d round with reward = %s (took %s sec)" %
+                    (round_count, final_reward, calc_time))
+            self.write_action_log_to_file(iteration_count, episode, self.my_uuid)
+
+    def write_action_log_to_file(self, iteration_count, episode, my_uuid):
+        header_divider = "*"*20
+        header = "\n".join([header_divider, "After %d iteration" % iteration_count, header_divider])
+        action_logs = [self._visualize_action_log(e) for e in episode]
+        action_logs = action_logs
+        logs = header + "\n" + "\n\n".join(action_logs) + "\n\n\n"
+        with open(self.log_fpath, "a") as f: f.write(logs)
+
+    def _visualize_action_log(self, experience):
+        state, action, _next_state, _reward = experience
+        players = state["table"].seats.players
+        me = [p for p in players if p.uuid == "uuid-0"][0]
+        me_pos = players.index(me)
+        sb_amount = state["small_blind_amount"]
+        valid_actions = ActionChecker.legal_actions(players, me_pos, sb_amount)
+        hole = [str(card) for card in me.hole_card]
+        round_state = DataEncoder.encode_round_state(state)
+        visualized_state = visualize_declare_action(valid_actions, hole, round_state)
+        action_log = "Agent took action [ %s: %s (%s) ] at round %d" % (
+                action["action"], action["amount"], action["name"], state["round_count"])
+        return "\n".join([visualized_state, action_log])
 

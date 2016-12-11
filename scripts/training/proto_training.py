@@ -31,7 +31,8 @@ from kyoka.callback import LearningRecorder, ManualInterruption
 from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
 from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
         LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
-from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder, EpisodeSampler
+from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder,\
+        EpisodeSampler, WeightsAnalyzer
 
 
 class ApproxActionValueFunction(QLearningApproxActionValueFunction):
@@ -52,6 +53,9 @@ class ApproxActionValueFunction(QLearningApproxActionValueFunction):
 
     def approx_backup(self, features, backup_target, alpha):
         self.delegate.approx_backup(features, backup_target, alpha)
+
+    def visualize_feature_weights(self):
+        return self.delegate.visualize_feature_weights()
 
     def save(self, save_dir_path):
         self.delegate.save(save_dir_path)
@@ -109,6 +113,11 @@ episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 1000
 episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
 callbacks.append(episode_sampler)
+
+weights_output_path = os.path.join(OUTPUT_DIR, "weights_analysis.txt")
+weights_sample_interval = 1000
+weights_analyzer = WeightsAnalyzer(weights_sample_interval, weights_output_path)
+callbacks.append(weights_analyzer)
 
 run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
 

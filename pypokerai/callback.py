@@ -149,3 +149,28 @@ class EpisodeSampler(BaseCallback):
                 action["action"], action["amount"], action["name"], state["round_count"])
         return "\n".join([visualized_state, action_log])
 
+class WeightsAnalyzer(BaseCallback):
+
+    def __init__(self, sample_interval, log_file_path):
+        self.sample_interval = sample_interval
+        self.log_fpath = log_file_path
+
+    def before_gpi_start(self, tack, value_function):
+        self.log("Analyze model weights after each %d iteration and log it on [ %s ]"
+                % (self.sample_interval, self.log_fpath))
+        header_content = "Initial weights"
+        self.write_visualized_weights_to_file(value_function, header_content)
+
+    def after_update(self, iteration_count, task, value_function):
+        if iteration_count % self.sample_interval == 0:
+            header_content = "After %d iteration" % iteration_count
+            self.write_visualized_weights_to_file(value_function, header_content)
+            self.log("Logged weights analysis")
+
+    def write_visualized_weights_to_file(self, value_function, header_content):
+            header_divider = "*"*40
+            header = "\n".join([header_divider, header_content, header_divider])
+            content = value_function.visualize_feature_weights()
+            logs = header + "\n" + content + "\n\n\n"
+            with open(self.log_fpath, "a") as f: f.write(logs)
+

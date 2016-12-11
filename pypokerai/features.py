@@ -19,6 +19,24 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
+def visualize_scalar_features_weight(weights):
+    assert len(weights) == 43
+    ls = []
+    ls.append("%s : %s" % ("round count", weights[0]))
+    ls.append("%s : %s" % ("dealer button", weights[1]))
+    ls.append("%s : %s" % ("next player", weights[2]))
+    ls.append("%s : %s" % ("small blind position", weights[3]))
+    ls.append("%s : %s" % ("street", weights[4]))
+    ls.append("%s : %s" % ("cards", weights[5]))
+    ls.append("seats")
+    for i in range(10):
+        ls.append("  player %d" % i)
+        w_player = weights[6+i*3:6+i*3+3]
+        for w, name in zip(w_player, ["stack", "state", "history(paid sum)"]):
+            ls.append("    %s : %s" % (name, w))
+    ls.append("%s : %s" % ("pot", weights[36]))
+    return "\n".join(ls)
+
 def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_scaled_scalar
@@ -34,6 +52,24 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
 
+def visualize_scaled_scalar_features_weight(weights):
+    assert len(weights) == 43
+    ls = []
+    ls.append("%s : %s" % ("round count", weights[0]))
+    ls.append("%s : %s" % ("dealer button", weights[1]))
+    ls.append("%s : %s" % ("next player", weights[2]))
+    ls.append("%s : %s" % ("small blind position", weights[3]))
+    ls.append("%s : %s" % ("street", weights[4]))
+    ls.append("%s : %s" % ("cards", weights[5]))
+    ls.append("seats")
+    for i in range(10):
+        ls.append("  player %d" % i)
+        w_player = weights[6+i*3:6+i*3+3]
+        for w, name in zip(w_player, ["stack", "state", "history(paid sum)"]):
+            ls.append("    %s : %s" % (name, w))
+    ls.append("%s : %s" % ("pot", weights[36]))
+    return "\n".join(ls)
+
 def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_onehot
@@ -48,6 +84,26 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
+
+def visualize_onehot_features_weight(weights):
+    assert len(weights) == 109
+    weights = [round(w, 4) for w in weights]
+    ls = []
+    ls.append("%s : %s" % ("round count", weights[:27]))
+    ls.append("%s : %s" % ("dealer button", weights[27:37]))
+    ls.append("%s : %s" % ("next player", weights[37:47]))
+    ls.append("%s : %s" % ("small blind position", weights[47:57]))
+    ls.append("%s : %s" % ("street", weights[57:61]))
+    ls.append("%s : %s" % ("cards", weights[61]))
+    ls.append("seats")
+    for i in range(10):
+        ls.append("  player %d" % i)
+        w_player = weights[62+i*4:62+i*4+4]
+        ls.append("    %s : %s" % ("stack", w_player[0]))
+        ls.append("    %s : %s" % ("state", w_player[1:3]))
+        ls.append("    %s : %s" % ("history(paid sum)", w_player[3]))
+    ls.append("%s : %s" % ("pot", weights[102]))
+    return "\n".join(ls)
 
 
 def round_count_to_scalar(round_state):

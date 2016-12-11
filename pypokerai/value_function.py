@@ -43,6 +43,9 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
             self, state, action, round_staet, my_uuid, hole_str, handicappers, blind_structure):
         raise NotImplementedError("[construct_poker_features] method is not implemented")
 
+    def visualize_feature_weights(self):
+        raise NotImplementedError("[visualize_feature_weights] method is not implemented")
+
     def save(self, save_dir_path):
         self.model.save_weights(os.path.join(save_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
 
@@ -64,6 +67,10 @@ class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
         return F.construct_scalar_features(
                 round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
 
+    def visualize_feature_weights(self):
+        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        return F.visualize_scalar_features_weight(weights)
+
 class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
@@ -78,6 +85,10 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
         return F.construct_scaled_scalar_features(
                 round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
 
+    def visualize_feature_weights(self):
+        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        return F.visualize_scaled_scalar_features_weight(weights)
+
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
@@ -91,4 +102,8 @@ class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
             self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
         return F.construct_onehot_features(
                 round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
+
+    def visualize_feature_weights(self):
+        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        return F.visualize_onehot_features_weight(weights)
 

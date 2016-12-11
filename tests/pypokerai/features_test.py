@@ -166,9 +166,15 @@ class FeaturesTest(BaseUnitTest):
         f_stack = F.player_stack_to_scaled_scalar
         f_state = F.player_state_to_scaled_scalar
         f_history = F.player_action_history_to_scaled_scalar
-        vec = F.seats_to_vector(round_state1, f_stack, f_state, f_history)
-        self.size(9, vec)
-        self.almosteq([0.26, 1, 0.35, 0, 1, 0.35, 0.4, 1, 0.35], vec, 0.01)
+        vec1 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "zjwhieqjlowtoogemqrjjo")
+        vec2 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "xgbpujiwtcccyicvfqffgy")
+        vec3 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "pnqfqsvgwkegkuwnzucvxw")
+        self.size(9, vec1)
+        self.almosteq([0.26, 1, 0.35, 0, 1, 0.35, 0.4, 1, 0.35], vec1, 0.01)
+        self.size(9, vec2)
+        self.almosteq([0, 1, 0.35, 0.4, 1, 0.35, 0.26, 1, 0.35], vec2, 0.01)
+        self.size(9, vec3)
+        self.almosteq([0.4, 1, 0.35, 0.26, 1, 0.35, 0, 1, 0.35], vec3, 0.01)
 
     def test_pot_to_scalar(self):
         self.eq(100, F.pot_to_scalar(round_state1)[0])

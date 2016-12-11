@@ -14,7 +14,7 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     sb_pos = sb_pos_to_scalar(round_state, my_uuid)
     street = street_to_scalar(round_state)
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
-    seats = seats_to_vector(round_state, f_stack, f_state, f_history)
+    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
@@ -47,7 +47,7 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     sb_pos = sb_pos_to_scaled_scalar(round_state, my_uuid)
     street = street_to_scaled_scalar(round_state)
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
-    seats = seats_to_vector(round_state, f_stack, f_state, f_history)
+    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
@@ -80,7 +80,7 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     sb_pos = sb_pos_to_onehot(round_state, my_uuid)
     street = street_to_onehot(round_state)
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
-    seats = seats_to_vector(round_state, f_stack, f_state, f_history)
+    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scaled_scalar(round_state)
     action = action_to_onehot(action)
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
@@ -202,10 +202,13 @@ def cards_to_scaled_scalar_by_neuralnet(round_state, hole_card, neuralnets):
         return [neuralnets[3].predict(hole, community)]
     raise Exception("Unexpected street [ %s ] received" % round_state["street"])
 
-def seats_to_vector(round_state, f_stack, f_state, f_history):
+def seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid):
+    my_pos = [p["uuid"] for p in round_state["seats"]].index(my_uuid)
     player_num = len(round_state["seats"])
+    relative_pos = range(player_num) + range(player_num)
+    relative_pos = relative_pos[my_pos:my_pos+player_num]
     c_p2vec = lambda pos: player_to_vector(round_state, pos, f_stack, f_state, f_history)
-    player_vecs = [c_p2vec(pos) for pos in range(player_num)]
+    player_vecs = [c_p2vec(pos) for pos in relative_pos]
     return reduce(lambda acc, e: acc+e, player_vecs, [])
 
 def player_to_vector(round_state, seat_pos, f_stack, f_state, f_history):

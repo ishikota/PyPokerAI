@@ -4,7 +4,7 @@ from pypokerengine.utils.card_utils import gen_cards, estimate_hole_card_win_rat
 
 from pypokerai.task import FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
 
-def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
+def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scalar
@@ -16,11 +16,12 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scalar(round_state)
-    action = action_to_onehot(action)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_scalar_features_weight(weights):
-    assert len(weights) == 43
+    return "TODO visualize_scalar_features_weight"
+    """
+    assert len(weights) == 37
     ls = []
     ls.append("%s : %s" % ("round count", weights[0]))
     ls.append("%s : %s" % ("dealer button", weights[1]))
@@ -36,8 +37,9 @@ def visualize_scalar_features_weight(weights):
             ls.append("    %s : %s" % (name, w))
     ls.append("%s : %s" % ("pot", weights[36]))
     return "\n".join(ls)
+    """
 
-def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
+def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_scaled_scalar
     f_history = player_action_history_to_scaled_scalar
@@ -49,11 +51,12 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scaled_scalar(round_state)
-    action = action_to_onehot(action)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_scaled_scalar_features_weight(weights):
-    assert len(weights) == 43
+    return "TODO visualize_scalar_features_weight"
+    """
+    assert len(weights) == 37
     ls = []
     ls.append("%s : %s" % ("round count", weights[0]))
     ls.append("%s : %s" % ("dealer button", weights[1]))
@@ -69,8 +72,9 @@ def visualize_scaled_scalar_features_weight(weights):
             ls.append("    %s : %s" % (name, w))
     ls.append("%s : %s" % ("pot", weights[36]))
     return "\n".join(ls)
+    """
 
-def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, action, neuralnets=None, algorithm="neuralnet"):
+def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
     f_state = player_state_to_onehot
     f_history = player_action_history_to_scaled_scalar
@@ -82,11 +86,12 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
     seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
     pot = pot_to_scaled_scalar(round_state)
-    action = action_to_onehot(action)
-    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot + action
+    return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_onehot_features_weight(weights):
-    assert len(weights) == 109
+    return "TODO visualize_onehot_features_weight"
+    """
+    assert len(weights) == 103
     weights = [round(w, 4) for w in weights]
     ls = []
     ls.append("%s : %s" % ("round count", weights[:27]))
@@ -104,6 +109,7 @@ def visualize_onehot_features_weight(weights):
         ls.append("    %s : %s" % ("history(paid sum)", w_player[3]))
     ls.append("%s : %s" % ("pot", weights[102]))
     return "\n".join(ls)
+    """
 
 
 def round_count_to_scalar(round_state):

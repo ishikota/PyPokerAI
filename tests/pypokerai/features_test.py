@@ -194,7 +194,7 @@ class FeaturesTest(BaseUnitTest):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
         vec = F.construct_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
-        self.size(22, vec)
+        self.size(16, vec)
 
     def xtest_visualize_scalar_features_weight(self):
         str_f = F.visualize_scalar_features_weight(scalar_feature_weight)
@@ -204,7 +204,7 @@ class FeaturesTest(BaseUnitTest):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
         vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
-        self.size(22, vec)
+        self.size(16, vec)
 
     def xtest_visualize_scaled_scalar_features_weight(self):
         str_f = F.visualize_scaled_scalar_features_weight(scaled_feature_weight)
@@ -214,7 +214,7 @@ class FeaturesTest(BaseUnitTest):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
         vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
-        self.size(38, vec)
+        self.size(32, vec)
 
     def xtest_visualize_scaled_scalar_features_weight(self):
         str_f = F.visualize_onehot_features_weight(onehot_feature_weight)

@@ -6,6 +6,11 @@ from keras.layers.core import Dense
 from kyoka.value_function import BaseApproxActionValueFunction
 from holecardhandicapper.model.neuralnet import Neuralnet
 from pypokerengine.engine.data_encoder import DataEncoder
+from pypokerai.task import FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
+
+MODEL_OUTPUT_ACTION_POSITION = [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE]
+def action_index(action):
+    return MODEL_OUTPUT_ACTION_POSITION.index(action["name"])
 
 class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 
@@ -27,14 +32,21 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         hole_card = [p for p in state["table"].seats.players if p.uuid==my_uuid][0].hole_card
         hole_str = [str(card) for card in hole_card]
         round_state = DataEncoder.encode_round_state(state)
-        return self.construct_poker_features(
+        features = self.construct_poker_features(
                 state, action, round_state, my_uuid, hole_str, self.handicappers, self.blind_structure)
+        return features, action
 
     def approx_predict_value(self, features):
-        return self.model.predict_on_batch(np.array([features]))[0][0]
+        X, action = features
+        values = self.model.predict_on_batch(np.array([X]))[0].tolist()
+        valur_for_action = values[action_index(action)]
+        return valur_for_action
 
     def approx_backup(self, features, backup_target, alpha):
-        loss = self.model.train_on_batch(np.array([features]), np.array([backup_target]))
+        X, action = features
+        Y = self.model.predict_on_batch(np.array([X]))[0].tolist()
+        Y[action_index(action)] = backup_target
+        loss = self.model.train_on_batch(np.array([X]), np.array([Y]))
 
     def build_model(self):
         raise NotImplementedError("[build_model] method is not implemented")
@@ -56,54 +68,54 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 43
+        input_dim = 37
         model = Sequential()
-        model.add(Dense(1, input_dim=input_dim))
+        model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
         return model
 
     def construct_poker_features(
             self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
         return F.construct_scalar_features(
-                round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
+                round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        weights = [w for e in self.model.get_weights() for w in e]
         return F.visualize_scalar_features_weight(weights)
 
 class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 43
+        input_dim = 37
         model = Sequential()
-        model.add(Dense(1, input_dim=input_dim))
+        model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
         return model
 
     def construct_poker_features(
             self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
         return F.construct_scaled_scalar_features(
-                round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
+                round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        weights = [w for e in self.model.get_weights() for w in e]
         return F.visualize_scaled_scalar_features_weight(weights)
 
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 109
+        input_dim = 103
         model = Sequential()
-        model.add(Dense(1, input_dim=input_dim))
+        model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
         return model
 
     def construct_poker_features(
             self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
         return F.construct_onehot_features(
-                round_state, my_uuid, hole_str, blind_structure, action, neuralnets=handicappers)
+                round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights()[0].tolist() for w in e]
+        weights = [w for e in self.model.get_weights() for w in e]
         return F.visualize_onehot_features_weight(weights)
 

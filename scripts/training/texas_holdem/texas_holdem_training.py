@@ -4,7 +4,7 @@
 import os
 import sys
 
-root = os.path.join(os.path.dirname(__file__), "..", "..")
+root = os.path.join(os.path.dirname(__file__), "..", "..", "..")
 src_path = os.path.join(root, "pypokerai")
 sys.path.append(root)
 sys.path.append(src_path)

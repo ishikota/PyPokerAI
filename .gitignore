@@ -6,5 +6,5 @@
 .pypirc
 dist
 build
-scripts/training/results/*
-!scripts/training/results/.gitkeep
+scripts/training/texas_holdem/results/*
+!scripts/training/texas_holdem/results/.gitkeep

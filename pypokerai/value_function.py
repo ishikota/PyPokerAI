@@ -80,8 +80,7 @@ class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
                 round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights() for w in e]
-        return F.visualize_scalar_features_weight(weights)
+        return F.visualize_scalar_features_weight(self.model.get_weights())
 
 class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
@@ -98,8 +97,7 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
                 round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights() for w in e]
-        return F.visualize_scaled_scalar_features_weight(weights)
+        return F.visualize_scaled_scalar_features_weight(self.model.get_weights())
 
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 
@@ -116,6 +114,5 @@ class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
                 round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
 
     def visualize_feature_weights(self):
-        weights = [w for e in self.model.get_weights() for w in e]
-        return F.visualize_onehot_features_weight(weights)
+        return F.visualize_onehot_features_weight(self.model.get_weights())
 

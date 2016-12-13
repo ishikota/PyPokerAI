@@ -19,25 +19,38 @@ def construct_scalar_features(round_state, my_uuid, hole_card, blind_strecture, 
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_scalar_features_weight(weights):
-    return "TODO visualize_scalar_features_weight"
-    """
-    assert len(weights) == 37
+    assert weights[0].shape == (37, 6)
+    acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+    w_for_acts = weights[0].T
+    w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
     ls = []
-    ls.append("%s : %s" % ("round count", weights[0]))
-    ls.append("%s : %s" % ("dealer button", weights[1]))
-    ls.append("%s : %s" % ("next player", weights[2]))
-    ls.append("%s : %s" % ("small blind position", weights[3]))
-    ls.append("%s : %s" % ("street", weights[4]))
-    ls.append("%s : %s" % ("cards", weights[5]))
+    ls.append("round count")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[0]))
+    ls.append("dealer button")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[1]))
+    ls.append("next_player")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[2]))
+    ls.append("small blind position")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[3]))
+    ls.append("street")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[4]))
+    ls.append("cards")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[5]))
+    ls.append("pot")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[36]))
     ls.append("seats")
     for i in range(10):
-        ls.append("  player %d" % i)
-        w_player = weights[6+i*3:6+i*3+3]
-        for w, name in zip(w_player, ["stack", "state", "history(paid sum)"]):
-            ls.append("    %s : %s" % (name, w))
-    ls.append("%s : %s" % ("pot", weights[36]))
+        stack, state, history = {}, {}, {}
+        for act, w in zip(acts, w_for_acts):
+            w_player = w[6+i*3:6+i*3+3]
+            stack[act] = w_player[0]
+            state[act] = w_player[1]
+            history[act] = w_player[2]
+        ls.append("    player %d" % i)
+        ls.append("      %s : %s" % ("stack", stack))
+        ls.append("      %s : %s" % ("state", state))
+        ls.append("      %s : %s" % ("history(paid sum)", history))
     return "\n".join(ls)
-    """
 
 def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
@@ -54,25 +67,38 @@ def construct_scaled_scalar_features(round_state, my_uuid, hole_card, blind_stre
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_scaled_scalar_features_weight(weights):
-    return "TODO visualize_scalar_features_weight"
-    """
-    assert len(weights) == 37
+    assert weights[0].shape == (37, 6)
+    acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+    w_for_acts = weights[0].T
+    w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
     ls = []
-    ls.append("%s : %s" % ("round count", weights[0]))
-    ls.append("%s : %s" % ("dealer button", weights[1]))
-    ls.append("%s : %s" % ("next player", weights[2]))
-    ls.append("%s : %s" % ("small blind position", weights[3]))
-    ls.append("%s : %s" % ("street", weights[4]))
-    ls.append("%s : %s" % ("cards", weights[5]))
+    ls.append("round count")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[0]))
+    ls.append("dealer button")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[1]))
+    ls.append("next_player")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[2]))
+    ls.append("small blind position")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[3]))
+    ls.append("street")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[4]))
+    ls.append("cards")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[5]))
+    ls.append("pot")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[36]))
     ls.append("seats")
     for i in range(10):
-        ls.append("  player %d" % i)
-        w_player = weights[6+i*3:6+i*3+3]
-        for w, name in zip(w_player, ["stack", "state", "history(paid sum)"]):
-            ls.append("    %s : %s" % (name, w))
-    ls.append("%s : %s" % ("pot", weights[36]))
+        stack, state, history = {}, {}, {}
+        for act, w in zip(acts, w_for_acts):
+            w_player = w[6+i*3:6+i*3+3]
+            stack[act] = w_player[0]
+            state[act] = w_player[1]
+            history[act] = w_player[2]
+        ls.append("    player %d" % i)
+        ls.append("      %s : %s" % ("stack", stack))
+        ls.append("      %s : %s" % ("state", state))
+        ls.append("      %s : %s" % ("history(paid sum)", history))
     return "\n".join(ls)
-    """
 
 def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
     f_stack = player_stack_to_scaled_scalar
@@ -89,27 +115,38 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     return round_count + dealer_btn + next_player + sb_pos + street + cards + seats + pot
 
 def visualize_onehot_features_weight(weights):
-    return "TODO visualize_onehot_features_weight"
-    """
-    assert len(weights) == 103
-    weights = [round(w, 4) for w in weights]
+    assert weights[0].shape == (103, 6)
+    acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+    w_for_acts = weights[0].T
+    w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
     ls = []
-    ls.append("%s : %s" % ("round count", weights[:27]))
-    ls.append("%s : %s" % ("dealer button", weights[27:37]))
-    ls.append("%s : %s" % ("next player", weights[37:47]))
-    ls.append("%s : %s" % ("small blind position", weights[47:57]))
-    ls.append("%s : %s" % ("street", weights[57:61]))
-    ls.append("%s : %s" % ("cards", weights[61]))
+    ls.append("round count")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[:27]))
+    ls.append("dealer button")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[27:37]))
+    ls.append("next_player")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[37:47]))
+    ls.append("small blind position")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[47:57]))
+    ls.append("street")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[57:61]))
+    ls.append("cards")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[61]))
+    ls.append("pot")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[102]))
     ls.append("seats")
     for i in range(10):
-        ls.append("  player %d" % i)
-        w_player = weights[62+i*4:62+i*4+4]
-        ls.append("    %s : %s" % ("stack", w_player[0]))
-        ls.append("    %s : %s" % ("state", w_player[1:3]))
-        ls.append("    %s : %s" % ("history(paid sum)", w_player[3]))
-    ls.append("%s : %s" % ("pot", weights[102]))
+        stack, state, history = {}, {}, {}
+        for act, w in zip(acts, w_for_acts):
+            w_player = w[62+i*4:62+i*4+4]
+            stack[act] = w_player[0]
+            state[act] = w_player[1:3]
+            history[act] = w_player[3]
+        ls.append("    player %d" % i)
+        ls.append("      %s : %s" % ("stack", stack))
+        ls.append("      %s : %s" % ("state", state))
+        ls.append("      %s : %s" % ("history(paid sum)", history))
     return "\n".join(ls)
-    """
 
 
 def round_count_to_scalar(round_state):

@@ -144,6 +144,35 @@ class TexasHoldemTask(BaseTask):
         else:
             return 0
 
+class OneRoundPokerTask(TexasHoldemTask):
+
+    def is_terminal_state(self, state):
+        assert self._round_check(state)
+        return state["street"] == Const.Street.FINISHED
+
+    def transit_state(self, state, action):
+        assert self._check_my_turn(state)
+        assert self._round_check(state)
+        assert not self.is_terminal_state(state)
+        action, amount = action["action"], action["amount"]
+        state, _events = self.emulator.apply_action(state, action, amount)
+        while not self._check_my_turn(state) and not self.is_terminal_state(state):
+            action, amount = self._choose_opponent_action(state)
+            state, _events = self.emulator.apply_action(state, action, amount)
+        return state
+
+    def calculate_reward(self, state):
+        if self.is_terminal_state(state):
+            if self.scale_reward:
+                return 1.0 * pick_me(state).stack / (nb_player * initial_stack)
+            else:
+                return pick_me(state).stack
+        else:
+            return 0
+
+    def _round_check(self, state):
+        return state["round_count"] == 1
+
 def gen_fold_action():
     return { "name": FOLD, "action": "fold", "amount": 0 }
 

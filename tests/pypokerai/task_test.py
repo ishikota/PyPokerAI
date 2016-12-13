@@ -1,10 +1,99 @@
 from mock import Mock
 from tests.base_unittest import BaseUnitTest
-from pypokerai.task import TexasHoldemTask, my_uuid, pick_me, blind_structure
+from pypokerai.task import TexasHoldemTask, OneRoundPokerTask, my_uuid, pick_me, blind_structure
 from pypokerengine.engine.action_checker import ActionChecker
+from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 
-class TaskTest(BaseUnitTest):
+class OneRoundPokerTaskTest(BaseUnitTest):
+
+    def setUp(self):
+        self.task = OneRoundPokerTask()
+        def recommend_fold(state, action):
+            if action["action"] == "fold":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_fold
+        self.task.set_opponent_value_functions([value_func]*9)
+
+    def test_generate_initial_state(self):
+        state = self.task.generate_initial_state()
+        me = pick_me(state)
+        players = state["table"].seats.players
+        self.eq(1, state["round_count"])
+        self.eq(25, state["small_blind_amount"])
+        self.eq(0, state["street"])
+        self.eq(players.index(me), state["next_player"])
+        self.size(10, players)
+        self.eq(10000, players[0].stack)
+        self.eq(9975, players[1].stack)
+        self.eq(9950, players[2].stack)
+        self.true(all([p.stack == 10000 for p in state["table"].seats.players[3:]]))
+        self.include("agent", [p.name for p in state["table"].seats.players])
+
+    def test_is_terminal_state(self):
+        state = self.task.generate_initial_state()
+        self.false(self.task.is_terminal_state(state))
+        state["street"] = Const.Street.FINISHED
+        self.true(self.task.is_terminal_state(state))
+
+    def test_transit_state_when_others_folded(self):
+        state = self.task.generate_initial_state()
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = self.task.transit_state(state, act_call)
+        self.eq(10075, pick_me(state).stack)
+        self.true(self.task.is_terminal_state(state))
+
+    def test_transit_state_when_agent_folded(self):
+        state = self.task.generate_initial_state()
+        act_fold = self.task.generate_possible_actions(state)[0]
+        state = self.task.transit_state(state, act_fold)
+        self.eq(10000, pick_me(state).stack)
+        self.true(self.task.is_terminal_state(state))
+
+    def test_transit_state_till_round_finish(self):
+        self.task = OneRoundPokerTask()
+        def recommend_call(state, action):
+            if action["action"] == "call":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_call
+        self.task.set_opponent_value_functions([value_func]*9)
+
+        state = self.task.generate_initial_state()
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = self.task.transit_state(state, act_call)
+        players = state["table"].seats.players
+        round_state = DataEncoder.encode_round_state(state)
+        self.eq(1, state["round_count"])
+        self.eq(0, state["table"].dealer_btn)
+        self.eq(6, state["next_player"])
+        self.eq("flop", round_state["street"])
+        self.eq(500, round_state["pot"]["main"]["amount"])
+
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = self.task.transit_state(state, act_call)
+        round_state = DataEncoder.encode_round_state(state)
+        self.eq(6, state["next_player"])
+        self.eq("turn", round_state["street"])
+        self.eq(500, round_state["pot"]["main"]["amount"])
+
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = self.task.transit_state(state, act_call)
+        round_state = DataEncoder.encode_round_state(state)
+        self.eq(6, state["next_player"])
+        self.eq("river", round_state["street"])
+        self.eq(500, round_state["pot"]["main"]["amount"])
+
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = self.task.transit_state(state, act_call)
+        self.true(self.task.is_terminal_state(state))
+
+class TexasHoldemTaskTest(BaseUnitTest):
 
     def setUp(self):
         self.task = TexasHoldemTask()

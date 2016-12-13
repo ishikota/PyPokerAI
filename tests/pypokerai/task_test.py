@@ -207,6 +207,26 @@ class TexasHoldemTaskTest(BaseUnitTest):
         for player in others: player.stack = 0
         self.eq(10000, self.task.calculate_reward(state))
 
+    def test_calculate_reward_scaled_model(self):
+        state = self.task.generate_initial_state()
+        state["street"] = Const.Street.FINISHED
+        others = [p for p in state["table"].seats.players if p.uuid != my_uuid]
+        for player in others: player.stack = 0
+        task = TexasHoldemTask(scale_reward=True)
+        self.eq(0.1, task.calculate_reward(state))
+
+    def test_calculate_reward_lose_penalty(self):
+        state = self.task.generate_initial_state()
+        me = [p for p in state["table"].seats.players if p.uuid == my_uuid][0]
+        state["street"] = Const.Street.FINISHED
+        self.false(self.task.is_terminal_state(state))
+        me.stack = 0
+        self.true(self.task.is_terminal_state(state))
+        task = TexasHoldemTask(lose_penalty=True)
+        self.eq(-1, task.calculate_reward(state))
+        task = TexasHoldemTask(scale_reward=True, lose_penalty=True)
+        self.eq(-1, task.calculate_reward(state))
+
     def test_blind_structure(self):
         bs = blind_structure
         def check(level, ante, sb):

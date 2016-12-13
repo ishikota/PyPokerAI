@@ -3,14 +3,21 @@ from pypokerengine.utils.game_state_utils import restore_game_state, attach_hole
 from pypokerengine.utils.card_utils import gen_cards
 import pypokerengine.utils.visualize_utils as U
 from kyoka.policy import choose_best_action
+from pypokerai.features import cards_to_scaled_scalar
 
 class PokerPlayer(BasePokerPlayer):
 
-    def __init__(self, task, value_function):
+    def __init__(self, task, value_function, debug=True):
         self.task = task
         self.value_func = value_function
+        self.debug_mode = debug
 
     def declare_action(self, valid_actions, hole_card, round_state):
+        if debug_mode:
+            win_rate = cards_to_scaled_scalar(
+                    round_state, hole_card, "neuralnet",
+                    neuralnets=self.value_func.handicappers)
+            print "hole card=%s (win_rate=%s)" % (hole_card, win_rate)
         game_state = restore_state(hole_card, round_state)
         action = choose_best_action(self.task, self.value_func, game_state)
         return action["action"], action["amount"]

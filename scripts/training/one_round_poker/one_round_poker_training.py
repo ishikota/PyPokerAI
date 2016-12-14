@@ -73,11 +73,11 @@ os.mkdir(OUTPUT_DIR)
 script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
 shutil.copyfile(__file__, script_output_path)
 
-TEST_LENGTH = 10000
+TEST_LENGTH = 100000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = OneRoundPokerTask(scale_reward=True)
+task = OneRoundPokerTask(scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)

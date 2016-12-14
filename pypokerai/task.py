@@ -166,6 +166,8 @@ class OneRoundPokerTask(TexasHoldemTask):
 
     def calculate_reward(self, state):
         if self.is_terminal_state(state):
+            if pick_me(state).stack == 0 and self.lose_penalty:
+                return -1
             if self.scale_reward:
                 return 1.0 * pick_me(state).stack / (nb_player * initial_stack)
             else:

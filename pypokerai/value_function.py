@@ -20,6 +20,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
     def __init__(self, blind_structure, handicappers=None):
         self.blind_structure = blind_structure
         self.handicappers = handicappers
+        self.prediction_cache = (None, None)  # (features, prediction)
 
     def setup(self):
         self.model = self.build_model()
@@ -38,7 +39,11 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 
     def approx_predict_value(self, features):
         X, action = features
-        values = self.model.predict_on_batch(np.array([X]))[0].tolist()
+        if self.prediction_cache[0] == X:
+            values = self.prediction_cache[1]
+        else:
+            values = self.model.predict_on_batch(np.array([X]))[0].tolist()
+            self.prediction_cache = (X, values)
         valur_for_action = values[action_index(action)]
         return valur_for_action
 
@@ -47,6 +52,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         Y = self.model.predict_on_batch(np.array([X]))[0].tolist()
         Y[action_index(action)] = backup_target
         loss = self.model.train_on_batch(np.array([X]), np.array([Y]))
+        self.prediction_cache = (None, None)
 
     def build_model(self):
         raise NotImplementedError("[build_model] method is not implemented")

@@ -68,7 +68,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 37
+        input_dim = 35
         model = Sequential()
         model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
@@ -85,7 +85,7 @@ class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
 class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 37
+        input_dim = 35
         model = Sequential()
         model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
@@ -102,7 +102,7 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 103
+        input_dim = 83
         model = Sequential()
         model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")

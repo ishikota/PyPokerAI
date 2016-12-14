@@ -45,6 +45,7 @@ class OneRoundPokerTaskTest(BaseUnitTest):
         state = self.task.transit_state(state, act_call)
         self.eq(10075, pick_me(state).stack)
         self.true(self.task.is_terminal_state(state))
+        self.eq(10075, self.task.calculate_reward(state))
 
     def test_transit_state_when_agent_folded(self):
         state = self.task.generate_initial_state()
@@ -149,12 +150,8 @@ class TexasHoldemTaskTest(BaseUnitTest):
         self.eq(10000, players[2].stack)
         self.eq(9950, players[3].stack)
 
-        state = self.task.generate_initial_state()
-        act_call = self.task.generate_possible_actions(state)[1]
-        state = self.task.transit_state(state, act_fold)
-        players = state["table"].seats.players
-
-    def test_transit_state_when_finish(self):
+    def test_transit_state_when_agent_lose(self):
+        # if agent cards is stronger than other 9 players this test fails
         def recommend_call(state, action):
             if action["action"] == "call":
                 return 1
@@ -169,13 +166,39 @@ class TexasHoldemTaskTest(BaseUnitTest):
         allin = [act for act in actions if act["name"] == "max_raise"][0]
         state = self.task.transit_state(state, allin)
         self.true(self.task.is_terminal_state(state))
+        self.eq(0, self.task.calculate_reward(state))
+
+    def test_transit_state_when_last_trhee_player(self):
+        def recommend_allin(state, action):
+            if action["name"] == "max_raise":
+                return 1
+            if action["amount"] == 10000 and action["name"] == "call":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_allin
+        self.task.set_opponent_value_functions([value_func]*9)
+
+        state = self.task.generate_initial_state()
+        actions = self.task.generate_possible_actions(state)
+        fold = actions[0]
+        state = self.task.transit_state(state, fold)
+        players = state["table"].seats.players
+        # When more than 3 player's card has same strength, below assertion fails
+        self.assertLessEqual(len([p for p in players if p.stack !=0]), 3)
+        self.true(self.task.is_terminal_state(state))
+        self.eq(10000, self.task.calculate_reward(state))
 
     def test_transit_state_when_round_finish(self):
         state = self.task.generate_initial_state()
+        self.eq(1, state["round_count"])
         fold = self.task.generate_possible_actions(state)[0]
         state = self.task.transit_state(state, fold)
+        self.eq(2, state["round_count"])
         fold = self.task.generate_possible_actions(state)[0]
         state = self.task.transit_state(state, fold)
+        self.eq(3, state["round_count"])
 
     def test_is_terminal_state_when_active_player_is_three(self):
         state = self.task.generate_initial_state()

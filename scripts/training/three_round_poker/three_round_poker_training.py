@@ -90,7 +90,7 @@ TEST_LENGTH = 500000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = TexasHoldemTask(final_round=1, scale_reward=True, lose_penalty=True)
+task = TexasHoldemTask(final_round=3, scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH/10)

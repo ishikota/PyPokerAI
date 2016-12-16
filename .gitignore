@@ -6,7 +6,7 @@
 .pypirc
 dist
 build
-scripts/training/texas_holdem/results/*
-!scripts/training/texas_holdem/results/.gitkeep
-scripts/training/one_round_poker/results/*
-!scripts/training/one_round_poker/results/.gitkeep
+scripts/training/tournament/results/*
+!scripts/training/tournament/results/.gitkeep
+scripts/training/*_round_poker/results/*
+!scripts/training/*_round_poker/results/.gitkeep

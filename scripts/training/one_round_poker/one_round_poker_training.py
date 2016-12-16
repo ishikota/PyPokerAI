@@ -22,6 +22,16 @@ def run_insecure_method(f, args):
 import shutil
 from datetime import datetime
 
+# Create Loggar class to record the log output on console
+class Logger(object):
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
 from kyoka.algorithm.montecarlo import MonteCarlo, MonteCarloApproxActionValueFunction
 from kyoka.algorithm.q_learning import QLearning, QLearningApproxActionValueFunction
 from kyoka.algorithm.sarsa import Sarsa, SarsaApproxActionValueFunction
@@ -68,6 +78,9 @@ time_stamp = datetime.now().strftime('%m%d_%H_%M_%S')
 TRAINING_TITLE = "proto_run_at_%s" % time_stamp
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", TRAINING_TITLE)
 os.mkdir(OUTPUT_DIR)
+
+# record log on terminal in log file
+sys.stdout = Logger(os.path.join(OUTPUT_DIR, "training.log"))
 
 # copy training script to output dir
 script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))

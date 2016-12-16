@@ -62,11 +62,12 @@ pick_me = lambda state: [p for p in state["table"].seats.players if p.uuid == my
 
 class TexasHoldemTask(BaseTask):
 
-    def __init__(self, scale_reward=False, lose_penalty=False):
+    def __init__(self, final_round=max_round, scale_reward=False, lose_penalty=False):
+        self.final_round = final_round
         self.scale_reward = scale_reward
         self.lose_penalty = lose_penalty
         self.emulator = Emulator()
-        self.emulator.set_game_rule(nb_player, max_round, sb_amount, ante)
+        self.emulator.set_game_rule(nb_player, final_round, sb_amount, ante)
         self.emulator.set_blind_structure(blind_structure)
         self.opponent_value_functions = {}
         for uuid in players_info:
@@ -93,10 +94,12 @@ class TexasHoldemTask(BaseTask):
         active_players = [p for p in state["table"].seats.players if p.stack > 0]
         short_of_players = len(active_players) <= table_break_threshold
         i_am_loser = me.stack == 0
-        return round_finished and (short_of_players or i_am_loser)
+        is_final_round = state["round_count"] >= self.final_round
+        return round_finished and (short_of_players or i_am_loser or is_final_round)
 
     def transit_state(self, state, action):
         assert self._check_my_turn(state)
+        assert not self.is_terminal_state(state)
         action, amount = action["action"], action["amount"]
         state, _events = self.emulator.apply_action(state, action, amount)
         if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
@@ -146,37 +149,6 @@ class TexasHoldemTask(BaseTask):
                 return pick_me(state).stack
         else:
             return 0
-
-class OneRoundPokerTask(TexasHoldemTask):
-
-    def is_terminal_state(self, state):
-        assert self._round_check(state)
-        return state["street"] == Const.Street.FINISHED
-
-    def transit_state(self, state, action):
-        assert self._check_my_turn(state)
-        assert self._round_check(state)
-        assert not self.is_terminal_state(state)
-        action, amount = action["action"], action["amount"]
-        state, _events = self.emulator.apply_action(state, action, amount)
-        while not self._check_my_turn(state) and not self.is_terminal_state(state):
-            action, amount = self._choose_opponent_action(state)
-            state, _events = self.emulator.apply_action(state, action, amount)
-        return state
-
-    def calculate_reward(self, state):
-        if self.is_terminal_state(state):
-            if pick_me(state).stack == 0 and self.lose_penalty:
-                return -1
-            if self.scale_reward:
-                return 1.0 * pick_me(state).stack / (nb_player * initial_stack)
-            else:
-                return pick_me(state).stack
-        else:
-            return 0
-
-    def _round_check(self, state):
-        return state["round_count"] == 1
 
 def gen_fold_action():
     return { "name": FOLD, "action": "fold", "amount": 0 }

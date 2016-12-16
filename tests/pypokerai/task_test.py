@@ -1,6 +1,6 @@
 from mock import Mock
 from tests.base_unittest import BaseUnitTest
-from pypokerai.task import TexasHoldemTask, OneRoundPokerTask, my_uuid, pick_me, blind_structure
+from pypokerai.task import TexasHoldemTask, my_uuid, pick_me, blind_structure
 from pypokerengine.engine.action_checker import ActionChecker
 from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.poker_constants import PokerConstants as Const
@@ -8,7 +8,7 @@ from pypokerengine.engine.poker_constants import PokerConstants as Const
 class OneRoundPokerTaskTest(BaseUnitTest):
 
     def setUp(self):
-        self.task = OneRoundPokerTask()
+        self.task = TexasHoldemTask(final_round=1)
         def recommend_fold(state, action):
             if action["action"] == "fold":
                 return 1
@@ -55,7 +55,7 @@ class OneRoundPokerTaskTest(BaseUnitTest):
         self.true(self.task.is_terminal_state(state))
 
     def test_transit_state_till_round_finish(self):
-        self.task = OneRoundPokerTask()
+        self.task = TexasHoldemTask(final_round=1)
         def recommend_call(state, action):
             if action["action"] == "call":
                 return 1
@@ -199,6 +199,27 @@ class TexasHoldemTaskTest(BaseUnitTest):
         fold = self.task.generate_possible_actions(state)[0]
         state = self.task.transit_state(state, fold)
         self.eq(3, state["round_count"])
+
+    def test_transit_state_when_final_round(self):
+        self.task = TexasHoldemTask(final_round=2)
+        def recommend_fold(state, action):
+            if action["action"] == "fold":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_fold
+        self.task.set_opponent_value_functions([value_func]*9)
+
+        state = self.task.generate_initial_state()
+        self.eq(1, state["round_count"])
+        fold = self.task.generate_possible_actions(state)[0]
+        state = self.task.transit_state(state, fold)
+        self.eq(2, state["round_count"])
+        fold = self.task.generate_possible_actions(state)[0]
+        state = self.task.transit_state(state, fold)
+        self.eq(2, state["round_count"])
+        self.eq(Const.Street.FINISHED, state["street"])
 
     def test_is_terminal_state_when_active_player_is_three(self):
         state = self.task.generate_initial_state()

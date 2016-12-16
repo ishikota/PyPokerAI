@@ -28,7 +28,7 @@ from kyoka.algorithm.sarsa import Sarsa, SarsaApproxActionValueFunction
 from kyoka.policy import EpsilonGreedyPolicy
 from kyoka.callback import LearningRecorder, ManualInterruption
 
-from pypokerai.task import OneRoundPokerTask, blind_structure, my_uuid
+from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
 from pypokerai.value_function import LinearModelScalarFeaturesValueFunction,\
         LinearModelScaledScalarFeaturesValueFunction, LinearModelOnehotFeaturesValueFunction
 from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder,\
@@ -77,7 +77,7 @@ TEST_LENGTH = 100000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = OneRoundPokerTask(scale_reward=True, lose_penalty=True)
+task = TexasHoldemTask(final_round=1, scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH)

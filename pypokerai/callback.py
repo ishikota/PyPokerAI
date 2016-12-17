@@ -124,18 +124,18 @@ class EpisodeSampler(BaseCallback):
             final_reward = episode[-1][3]
             self.log("Episode finished at %d round with reward = %s (took %s sec)" %
                     (round_count, final_reward, calc_time))
-            self.write_action_log_to_file(iteration_count, episode, self.my_uuid, final_reward)
+            self.write_action_log_to_file(iteration_count, task, value_function, episode, self.my_uuid, final_reward)
 
-    def write_action_log_to_file(self, iteration_count, episode, my_uuid, final_reward):
+    def write_action_log_to_file(self, iteration_count, task, value_function, episode, my_uuid, final_reward):
         header_divider = "*"*40
         header_content = "After %d iteration (final reward = %s)" % (iteration_count, final_reward)
         header = "\n".join([header_divider, header_content, header_divider])
-        action_logs = [self._visualize_action_log(e) for e in episode]
+        action_logs = [self._visualize_action_log(task, value_function, e) for e in episode]
         action_logs = action_logs
         logs = header + "\n" + "\n\n".join(action_logs) + "\n\n\n"
         with open(self.log_fpath, "a") as f: f.write(logs)
 
-    def _visualize_action_log(self, experience):
+    def _visualize_action_log(self, task, value_function, experience):
         state, action, _next_state, _reward = experience
         players = state["table"].seats.players
         me = [p for p in players if p.uuid == "uuid-0"][0]
@@ -147,7 +147,11 @@ class EpisodeSampler(BaseCallback):
         visualized_state = visualize_declare_action(valid_actions, hole, round_state)
         action_log = "Agent took action [ %s: %s (%s) ] at round %d" % (
                 action["action"], action["amount"], action["name"], state["round_count"])
-        return "\n".join([visualized_state, action_log])
+        actions = task.generate_possible_actions(state)
+        act_vals = [value_function.predict_value(state, act) for act in actions]
+        act_names = [act["name"] for act in actions]
+        action_value_log = "  => %s" % zip(act_names, act_vals)
+        return "\n".join([visualized_state, action_log, action_value_log])
 
 class WeightsAnalyzer(BaseCallback):
 

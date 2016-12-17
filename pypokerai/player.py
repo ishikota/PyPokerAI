@@ -13,13 +13,21 @@ class PokerPlayer(BasePokerPlayer):
         self.debug_mode = debug
 
     def declare_action(self, valid_actions, hole_card, round_state):
+        game_state = restore_state(hole_card, round_state)
+        action = choose_best_action(self.task, self.value_func, game_state)
         if self.debug_mode:
             win_rate = cards_to_scaled_scalar(
                     round_state, hole_card, "neuralnet",
                     neuralnets=self.value_func.handicappers)
+            acts = self.task.generate_possible_actions(game_state)
+            act_names = [act["name"] for act in acts]
+            act_vals = [self.value_func.predict_value(game_state, a) for a in acts]
+            print ""
+            print "-- debug info [ %s ] --" % fetch_name(round_state, self.uuid)
             print "hole card=%s (win_rate=%s)" % (hole_card, win_rate)
-        game_state = restore_state(hole_card, round_state)
-        action = choose_best_action(self.task, self.value_func, game_state)
+            print "pot = %s" % round_state["pot"]
+            print zip(act_names, act_vals)
+            print ""
         return action["action"], action["amount"]
 
     def receive_game_start_message(self, game_info):
@@ -45,6 +53,9 @@ def restore_state(hole_card, round_state):
     me = game_state["table"].seats.players[game_state["next_player"]]
     me.hole_card = my_hole_card
     return game_state
+
+def fetch_name(round_state, uuid):
+    return [p["name"] for p in round_state["seats"] if p["uuid"] == uuid][0]
 
 class ConsolePlayer(BasePokerPlayer):
 

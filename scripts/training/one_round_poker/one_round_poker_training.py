@@ -129,7 +129,7 @@ callbacks.append(initial_value_scorer)
 
 episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 50000
-episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
+episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid, show_weights=True)
 callbacks.append(episode_sampler)
 
 weights_output_path = os.path.join(OUTPUT_DIR, "weights_analysis.txt")

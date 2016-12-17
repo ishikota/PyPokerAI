@@ -83,8 +83,13 @@ os.mkdir(OUTPUT_DIR)
 sys.stdout = Logger(os.path.join(OUTPUT_DIR, "training.log"))
 
 # copy training script to output dir
-script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
-shutil.copyfile(__file__, script_output_path)
+training_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(__file__))
+shutil.copyfile(__file__, training_script_output_path)
+
+# copy play game script to output dir
+play_script_path = os.path.join(root, "scripts", "play_game.py")
+play_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(play_script_path))
+shutil.copyfile(play_script_path, play_script_output_path)
 
 TEST_LENGTH = 500000
 
@@ -124,7 +129,7 @@ callbacks.append(initial_value_scorer)
 
 episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 50000
-episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid)
+episode_sampler = EpisodeSampler(episode_sample_interval, episode_log_path, my_uuid, show_weights=True)
 callbacks.append(episode_sampler)
 
 weights_output_path = os.path.join(OUTPUT_DIR, "weights_analysis.txt")

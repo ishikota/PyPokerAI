@@ -91,6 +91,11 @@ play_script_path = os.path.join(root, "scripts", "play_game.py")
 play_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(play_script_path))
 shutil.copyfile(play_script_path, play_script_output_path)
 
+# copy round-robin match script to output dir
+round_robin_script_path = os.path.join(root, "scripts", "round_robin_match.py")
+round_robin_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(round_robin_script_path))
+shutil.copyfile(round_robin_script_path, round_robin_script_output_path)
+
 TEST_LENGTH = 500000
 
 # Setup algorithm

@@ -12,7 +12,7 @@ from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.action_checker import ActionChecker
 
 from pypokerai.features import construct_onehot_features
-from pypokerai.task import blind_structure
+from pypokerai.task import blind_structure, FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
 
 class ResetOpponentValueFunction(BaseCallback):
 
@@ -161,7 +161,9 @@ class EpisodeSampler(BaseCallback):
                     round_state, me.uuid, hole, blind_structure, value_function.delegate.handicappers)
             w_for_acts = value_function.delegate.model.get_weights()[0].T
             weights_log.append("features : %s" % features)
-            for act, w in zip(actions, w_for_acts):
+            act_to_idx = lambda a: [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE].index(a["name"])
+            for act in actions:
+                w = w_for_acts[act_to_idx(act)]
                 weights_log.append("weight for %s : %s " % (act["name"], w.tolist()))
             action_value_log += "\n" + "\n".join(weights_log)
         return "\n".join([visualized_state, action_log, action_value_log])

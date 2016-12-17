@@ -13,7 +13,7 @@ class PokerPlayer(BasePokerPlayer):
         self.debug_mode = debug
 
     def declare_action(self, valid_actions, hole_card, round_state):
-        if debug_mode:
+        if self.debug_mode:
             win_rate = cards_to_scaled_scalar(
                     round_state, hole_card, "neuralnet",
                     neuralnets=self.value_func.handicappers)

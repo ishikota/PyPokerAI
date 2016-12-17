@@ -11,6 +11,9 @@ from pypokerengine.utils.visualize_utils import visualize_declare_action
 from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.action_checker import ActionChecker
 
+from pypokerai.features import construct_onehot_features
+from pypokerai.task import blind_structure
+
 class ResetOpponentValueFunction(BaseCallback):
 
     PLAYER_NUM = 9
@@ -105,11 +108,12 @@ class InitialStateValueRecorder(BaseCallback):
 
 class EpisodeSampler(BaseCallback):
 
-    def __init__(self, sample_interval, log_file_path, my_uuid):
+    def __init__(self, sample_interval, log_file_path, my_uuid, show_weights=False):
         self.sample_interval = sample_interval
         self.log_fpath = log_file_path
         self.greedy_policy = GreedyPolicy()
         self.my_uuid = my_uuid
+        self.show_weights = show_weights
 
     def before_gpi_start(self, tack, value_function):
         self.log("Sample episode after each %d iteration and log it on [ %s ]"
@@ -151,6 +155,15 @@ class EpisodeSampler(BaseCallback):
         act_vals = [value_function.predict_value(state, act) for act in actions]
         act_names = [act["name"] for act in actions]
         action_value_log = "  => %s" % zip(act_names, act_vals)
+        if self.show_weights:
+            weights_log = ["** weights and features **"]
+            features = construct_onehot_features(
+                    round_state, me.uuid, hole, blind_structure, value_function.delegate.handicappers)
+            w_for_acts = value_function.delegate.model.get_weights()[0].T
+            weights_log.append("features : %s" % features)
+            for act, w in zip(actions, w_for_acts):
+                weights_log.append("weight for %s : %s " % (act["name"], w.tolist()))
+            action_value_log += "\n" + "\n".join(weights_log)
         return "\n".join([visualized_state, action_log, action_value_log])
 
 class WeightsAnalyzer(BaseCallback):

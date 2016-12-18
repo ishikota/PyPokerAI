@@ -91,6 +91,16 @@ play_script_path = os.path.join(root, "scripts", "play_game.py")
 play_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(play_script_path))
 shutil.copyfile(play_script_path, play_script_output_path)
 
+# copy initial value plot script to output dir
+initial_value_plot_script_path = os.path.join(root, "scripts", "plot_initial_value.py")
+initial_value_plot_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(initial_value_plot_script_path))
+shutil.copyfile(initial_value_plot_script_path, initial_value_plot_script_output_path)
+
+# copy episode generator script to output dir
+episode_generate_script_path = os.path.join(root, "scripts", "episode_generator.py")
+episode_generate_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(episode_generate_script_path))
+shutil.copyfile(episode_generate_script_path, episode_generate_script_output_path)
+
 # copy round-robin match script to output dir
 round_robin_script_path = os.path.join(root, "scripts", "round_robin_match.py")
 round_robin_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(round_robin_script_path))
@@ -106,6 +116,12 @@ policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH/10)
 algorithm = MonteCarlo()
 algorithm.setup(task, policy, value_func)
+
+# load last training result
+LOAD_DIR_NAME = ""
+LOAD_DIR_PATH = os.path.join(os.path.dirname(__file__), "results", LOAD_DIR_NAME, "checkpoint", "gpi_finished")
+if len(LOAD_DIR_NAME) != 0:
+    algorithm.load(LOAD_DIR_PATH)
 
 # Setup callbacks
 callbacks = []

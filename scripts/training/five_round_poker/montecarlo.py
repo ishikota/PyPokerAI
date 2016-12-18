@@ -45,10 +45,10 @@ from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueReco
         EpisodeSampler, WeightsAnalyzer
 
 
-class ApproxActionValueFunction(QLearningApproxActionValueFunction):
+class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
 
     def __init__(self, handicappers=None):
-        super(QLearningApproxActionValueFunction, self).__init__()
+        super(MonteCarloApproxActionValueFunction, self).__init__()
         self._handicappers = handicappers
 
     def setup(self):
@@ -75,7 +75,7 @@ class ApproxActionValueFunction(QLearningApproxActionValueFunction):
 
 # Setup directory to output learning results
 time_stamp = datetime.now().strftime('%m%d_%H_%M_%S')
-TRAINING_TITLE = "trash_%s" % time_stamp
+TRAINING_TITLE = "montecarlo_trash_%s" % time_stamp
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", TRAINING_TITLE)
 os.mkdir(OUTPUT_DIR)
 
@@ -91,6 +91,16 @@ play_script_path = os.path.join(root, "scripts", "play_game.py")
 play_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(play_script_path))
 shutil.copyfile(play_script_path, play_script_output_path)
 
+# copy initial value plot script to output dir
+initial_value_plot_script_path = os.path.join(root, "scripts", "plot_initial_value.py")
+initial_value_plot_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(initial_value_plot_script_path))
+shutil.copyfile(initial_value_plot_script_path, initial_value_plot_script_output_path)
+
+# copy episode generator script to output dir
+episode_generate_script_path = os.path.join(root, "scripts", "episode_generator.py")
+episode_generate_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(episode_generate_script_path))
+shutil.copyfile(episode_generate_script_path, episode_generate_script_output_path)
+
 # copy round-robin match script to output dir
 round_robin_script_path = os.path.join(root, "scripts", "round_robin_match.py")
 round_robin_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(round_robin_script_path))
@@ -100,12 +110,18 @@ TEST_LENGTH = 500000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = TexasHoldemTask(final_round=3, scale_reward=True, lose_penalty=True)
+task = TexasHoldemTask(final_round=5, scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH/10)
-algorithm = QLearning(gamma=0.99)
+algorithm = MonteCarlo()
 algorithm.setup(task, policy, value_func)
+
+# load last training result
+LOAD_DIR_NAME = ""
+LOAD_DIR_PATH = os.path.join(os.path.dirname(__file__), "results", LOAD_DIR_NAME, "checkpoint", "gpi_finished")
+if len(LOAD_DIR_NAME) != 0:
+    algorithm.load(LOAD_DIR_PATH)
 
 # Setup callbacks
 callbacks = []

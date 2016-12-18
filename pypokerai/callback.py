@@ -171,7 +171,7 @@ class EpisodeSampler(BaseCallback):
                 linear_comb = [(f*w, f, w, features_title[idx]) for idx,(f,w) in enumerate(zip(features, weights))]
                 linear_comb.append((bias[act_to_idx(act)], 0, 0, "bias"))
                 linear_comb = sorted(linear_comb, key=lambda item: abs(item[0]))[::-1]
-                linear_comb = linear_comb[:20] + ["..."] + linear_comb[-10:]
+                #linear_comb = linear_comb[:30] + ["..."] + linear_comb[-10:]
                 weights_log.append("linear combination for %s :" % act["name"])
                 for comb in linear_comb:
                     weights_log.append("    %s" % str(comb))

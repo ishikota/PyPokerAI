@@ -130,6 +130,21 @@ def visualize_onehot_features_weight(weights):
         ls.append("      %s : %s" % ("history(paid sum)", history))
     return "\n".join(ls)
 
+def onehot_features_title():
+    ts = []
+    for i in range(27):
+        ts.append("round level %d" % (i+1))
+    for i in range(10):
+        ts.append("btn distance=%d" % i)
+    for street in ["preflop","flop","turn","river"]:
+        ts.append("street-%s" % street)
+    ts.append("cards")
+    for i in range(10):
+        player = "player-%d" % i
+        for title in ["stack", "state-fold", "state-active", "history"]:
+            ts.append("%s:%s" % (player, title))
+    ts.append("pot")
+    return ts
 
 def round_count_to_scalar(round_state):
     round_count = round_state["round_count"]

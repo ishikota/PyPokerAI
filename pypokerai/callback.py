@@ -161,6 +161,7 @@ class EpisodeSampler(BaseCallback):
                     round_state, me.uuid, hole, blind_structure, value_function.delegate.handicappers)
             w_for_acts = value_function.delegate.model.get_weights()[0].T
             weights_log.append("features : %s" % features)
+            weights_log.append("bias : %s" % value_function.delegate.model.layers[0].b.get_value())
             act_to_idx = lambda a: [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE].index(a["name"])
             for act in actions:
                 w = w_for_acts[act_to_idx(act)]

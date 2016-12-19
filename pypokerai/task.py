@@ -1,3 +1,5 @@
+import random
+from collections import OrderedDict
 from kyoka.task import BaseTask
 from kyoka.policy import choose_best_action
 from pypokerengine.api.emulator import Emulator
@@ -62,14 +64,18 @@ pick_me = lambda state: [p for p in state["table"].seats.players if p.uuid == my
 
 class TexasHoldemTask(BaseTask):
 
-    def __init__(self, final_round=max_round, scale_reward=False, lose_penalty=False):
+    def __init__(self, final_round=max_round, scale_reward=False, lose_penalty=False, shuffle_position=False):
         self.final_round = final_round
         self.scale_reward = scale_reward
         self.lose_penalty = lose_penalty
+        self.shuffle_position = shuffle_position
         self.emulator = Emulator()
         self.emulator.set_game_rule(nb_player, final_round, sb_amount, ante)
         self.emulator.set_blind_structure(blind_structure)
         self.opponent_value_functions = {}
+        if shuffle_position:
+            print "Warning: shuffle_position is set True. Are you sure?"
+
         for uuid in players_info:
             self.emulator.register_player(uuid, DummyPlayer())
             if uuid != my_uuid: self.opponent_value_functions[uuid] = None
@@ -81,7 +87,8 @@ class TexasHoldemTask(BaseTask):
             self.opponent_value_functions[uuid] = value_function
 
     def generate_initial_state(self):
-        clear_state = self.emulator.generate_initial_game_state(players_info)
+        p_info = _get_shuffled_players_info() if self.shuffle_position else players_info
+        clear_state = self.emulator.generate_initial_game_state(p_info)
         state, _events = self.emulator.start_new_round(clear_state)
         while not self._check_my_turn(state):
             action, amount = self._choose_opponent_action(state)
@@ -149,6 +156,14 @@ class TexasHoldemTask(BaseTask):
                 return pick_me(state).stack
         else:
             return 0
+
+def _get_shuffled_players_info():
+    shuffled_dict = OrderedDict()
+    base_items = players_info.items()
+    random.shuffle(base_items)
+    for key, val in base_items: shuffled_dict[key] = val
+    return shuffled_dict
+
 
 def gen_fold_action():
     return { "name": FOLD, "action": "fold", "amount": 0 }

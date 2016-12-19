@@ -107,6 +107,22 @@ class TexasHoldemTaskTest(BaseUnitTest):
         value_func.predict_value.side_effect = recommend_fold
         self.task.set_opponent_value_functions([value_func]*9)
 
+    def test_shuffle_seat_position(self):
+        def gen_task():
+            task = TexasHoldemTask(shuffle_position=True)
+            def recommend_fold(state, action):
+                if action["action"] == "fold":
+                    return 1
+                else:
+                    return 0
+            value_func = Mock()
+            value_func.predict_value.side_effect = recommend_fold
+            task.set_opponent_value_functions([value_func]*9)
+            return task
+        # Fail this test in probability 0.01
+        test = [6==gen_task().generate_initial_state()["next_player"] for _ in range(10)]
+        self.include(False, test)
+
     def test_generate_initial_state(self):
         state = self.task.generate_initial_state()
         me = pick_me(state)

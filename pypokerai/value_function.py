@@ -122,3 +122,6 @@ class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
     def visualize_feature_weights(self):
         return F.visualize_onehot_features_weight(self.model.get_weights())
 
+    def generate_features_title(self):
+        return F.onehot_features_title()
+

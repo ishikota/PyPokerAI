@@ -11,7 +11,6 @@ from pypokerengine.utils.visualize_utils import visualize_declare_action
 from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.action_checker import ActionChecker
 
-from pypokerai.features import construct_onehot_features, onehot_features_title
 from pypokerai.task import blind_structure, FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE
 
 class ResetOpponentValueFunction(BaseCallback):
@@ -157,23 +156,30 @@ class EpisodeSampler(BaseCallback):
         action_value_log = "  => %s" % zip(act_names, act_vals)
         if self.show_weights:
             weights_log = ["** weights and features in detail **"]
-            features_title = onehot_features_title()
-            features = construct_onehot_features(
-                    round_state, me.uuid, hole, blind_structure, value_function.delegate.handicappers)
+            features_title = value_function.delegate.generate_features_title()
+            features = value_function.delegate.construct_poker_features(
+                    "dummy", "dummy", round_state, me.uuid, hole,
+                    value_function.delegate.handicappers, blind_structure)
             w_for_acts = value_function.delegate.model.get_weights()[0].T
             bias = value_function.delegate.model.layers[0].b.get_value()
-            #weights_log.append("features : %s" % features)
+            weights_log.append("features : %s" % features)
             weights_log.append("bias : %s" % bias)
-            act_to_idx = lambda a: [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE].index(a["name"])
             for act in actions:
                 weights_log.append("")
-                weights = w_for_acts[act_to_idx(act)].tolist()
+                act_val = act_vals[actions.index(act)]
+                weights = w_for_acts[actions.index(act)].tolist()
                 linear_comb = [(f*w, f, w, features_title[idx]) for idx,(f,w) in enumerate(zip(features, weights))]
-                linear_comb.append((bias[act_to_idx(act)], 0, 0, "bias"))
+                linear_comb.append((bias[actions.index(act)], 0, 0, "bias"))
                 linear_comb = sorted(linear_comb, key=lambda item: abs(item[0]))[::-1]
-                #linear_comb = linear_comb[:30] + ["..."] + linear_comb[-10:]
+
+                display_items = []
+                for item in linear_comb:
+                    display_items.append(item)
+                    if abs(act_val - sum([tpl[0] for tpl in display_items])) < 0.01:
+                        break
+
                 weights_log.append("linear combination for %s :" % act["name"])
-                for comb in linear_comb:
+                for comb in display_items:
                     weights_log.append("    %s" % str(comb))
             action_value_log += "\n" + "\n".join(weights_log)
         return "\n".join([visualized_state, action_log, action_value_log])

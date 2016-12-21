@@ -100,11 +100,11 @@ def construct_onehot_features(round_state, my_uuid, hole_card, blind_strecture, 
     pot = pot_to_scaled_scalar(round_state)
     return round_count + dealer_btn + street + cards + seats + pot
 
-def visualize_onehot_features_weight(weights):
+def visualize_onehot_features_weight(weights, debug=False):
     assert weights[0].shape == (83, 6)
     acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
     w_for_acts = weights[0].T
-    w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
+    if not debug: w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
     ls = []
     ls.append("round count")
     for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[:27]))
@@ -144,6 +144,79 @@ def onehot_features_title():
         for title in ["stack", "state-fold", "state-active", "history"]:
             ts.append("%s:%s" % (player, title))
     ts.append("pot")
+    return ts
+
+def construct_binary_onehot_features(
+        round_state, my_uuid, hole_card, blind_strecture, neuralnets=None, algorithm="neuralnet"):
+    f_stack = player_stack_to_binary_array
+    f_state = player_state_to_onehot
+    f_history = player_action_history_to_binary_array
+    round_count = round_level_to_onehot(round_state, blind_strecture)
+    dealer_btn = dealer_btn_to_onehot(round_state, my_uuid)
+    street = street_to_onehot(round_state)
+    cards = cards_to_binary_array(round_state, hole_card, algorithm, neuralnets=neuralnets)
+    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid)
+    pot = pot_to_binary_array(round_state)
+    return round_count + dealer_btn + street + cards + seats + pot
+
+def visualize_binary_onehot_features_weight(weights, debug=True):
+    assert weights[0].shape == (281, 6)
+    acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+    w_for_acts = weights[0].T
+    if not debug: w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
+    w_for_acts = w_for_acts.tolist()
+    ls = []
+    ls.append("round count")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[:27]))
+    ls.append("dealer button")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[27:37]))
+    ls.append("street")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[37:41]))
+    ls.append("cards")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[41:51]))
+    ls.append("pot")
+    for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[271:281]))
+    ls.append("seats")
+    for i in range(10):
+        stack, state, history = {}, {}, {}
+        for act, w in zip(acts, w_for_acts):
+            w_player = w[51+i*22:51+i*22+22]
+            stack[act] = w_player[:10]
+            state[act] = w_player[10:12]
+            history[act] = w_player[12:]
+        ls.append("    player %d" % i)
+        ls.append("      stack")
+        for act in acts:
+            ls.append("        %s : %s" % (act, stack[act]))
+        ls.append("      state")
+        for act in acts:
+            ls.append("        %s : %s" % (act, state[act]))
+        ls.append("      history")
+        for act in acts:
+            ls.append("        %s : %s" % (act, history[act]))
+    return "\n".join(ls)
+
+def binary_onehot_features_title():
+    BINARY_LENGTH = 10
+    ts = []
+    for i in range(27):
+        ts.append("round level %d" % (i+1))
+    for i in range(10):
+        ts.append("btn distance=%d" % i)
+    for street in ["preflop","flop","turn","river"]:
+        ts.append("street-%s" % street)
+    for i in range(BINARY_LENGTH):
+        ts.append("cards-%d bit" % i)
+    for i in range(10):
+        player = "player-%d" % i
+        for i in range(BINARY_LENGTH):
+            ts.append("%s:stack-%d bit" % (player, i))
+        for state in ["fold", "active"]:
+            ts.append("%s:%s" % (player, state))
+        for i in range(BINARY_LENGTH):
+            ts.append("%s:history-%d bit" % (player, i))
+    for i in range(10):
+        ts.append("pot-%d bit" % i)
     return ts
 
 def round_count_to_scalar(round_state):
@@ -242,6 +315,11 @@ def cards_to_scaled_scalar_by_neuralnet(round_state, hole_card, neuralnets):
         return [neuralnets[3].predict(hole, community)]
     raise Exception("Unexpected street [ %s ] received" % round_state["street"])
 
+def cards_to_binary_array(round_state, hole_card, algorithm, simulation_num=100, neuralnets=None):
+    return _small_number_to_binary_array(
+            cards_to_scaled_scalar(round_state, hole_card, algorithm, simulation_num, neuralnets)[0]
+            )
+
 def seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid):
     my_pos = [p["uuid"] for p in round_state["seats"]].index(my_uuid)
     player_num = len(round_state["seats"])
@@ -268,6 +346,10 @@ def player_stack_to_scaled_scalar(round_state, seat_pos):
     pot_amount = pot_to_scalar(round_state)[0]
     all_chip = stack_sum + pot_amount
     return [1.0 * player_stack_to_scalar(round_state, seat_pos)[0] / all_chip]
+
+def player_stack_to_binary_array(round_state, seat_pos):
+    return _small_number_to_binary_array(
+            player_stack_to_scaled_scalar(round_state, seat_pos)[0])
 
 def player_state_to_scaled_scalar(round_state, seat_pos):
     state = round_state["seats"][seat_pos]["state"]
@@ -298,6 +380,10 @@ def player_action_history_to_scaled_scalar(round_state, seat_pos):
     pay_amount = player_action_history_to_scalar(round_state, seat_pos)[0]
     return [1.0 * pay_amount / pot_amount]
 
+def player_action_history_to_binary_array(round_state, seat_pos):
+    return _small_number_to_binary_array(
+            player_action_history_to_scaled_scalar(round_state, seat_pos)[0])
+
 def pot_to_scalar(round_state):
     pot = round_state["pot"]
     return [pot["main"]["amount"] + sum([side["amount"] for side in pot["side"]])]
@@ -308,10 +394,18 @@ def pot_to_scaled_scalar(round_state):
     pot_amount = pot_to_scalar(round_state)[0]
     return [1.0 * pot_amount / (pot_amount + stack_sum)]
 
+def pot_to_binary_array(round_state):
+    return _small_number_to_binary_array(pot_to_scaled_scalar(round_state)[0])
+
 def action_to_onehot(action):
     actions = [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAISE, MAX_RAISE]
     idx = actions.index(action["name"])
     return [1 if idx==i else 0 for i in range(len(actions))]
+
+def _small_number_to_binary_array(num):
+    if num >= 1: num = 0.999
+    significant = int(round(num*1000))
+    return [int(b) for b in bin(significant)[2:].zfill(10)][::-1]
 
 def _measure_distance_to_me(round_state, my_uuid, start_pos):
     player_num = len(round_state["seats"])

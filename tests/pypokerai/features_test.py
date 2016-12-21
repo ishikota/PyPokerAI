@@ -124,6 +124,13 @@ class FeaturesTest(BaseUnitTest):
         self.almosteq(0.56, F.cards_to_scaled_scalar(round_state1, ["S2", "D4"], "neuralnet", neuralnets=nns)[0], 0.01)
         self.almosteq(0.20, F.cards_to_scaled_scalar(round_state2, ["S2", "D4"], "neuralnet", neuralnets=nns)[0], 0.01)
 
+    def xtest_cards_to_binary_array(self):
+        from holecardhandicapper.model.neuralnet import Neuralnet
+        nns = [Neuralnet("preflop"), Neuralnet("flop"), Neuralnet("turn"), Neuralnet("river")]
+        [nn.compile() for nn in nns]
+        expected = [0, 0, 1, 0, 1, 1, 0, 0, 0, 1]  # bin(564) => 0b1000110100
+        self.eq(expected, F.cards_to_binary_array(round_state1, ["S2", "D4"], "neuralnet", neuralnets=nns))
+
     def test_player_stack_to_scalar(self):
         self.eq(80, F.player_stack_to_scalar(round_state1, 0)[0])
         self.eq(0, F.player_stack_to_scalar(round_state1, 1)[0])
@@ -133,6 +140,14 @@ class FeaturesTest(BaseUnitTest):
         self.almosteq(0.26, F.player_stack_to_scaled_scalar(round_state1, 0)[0], 0.01)
         self.almosteq(0, F.player_stack_to_scaled_scalar(round_state1, 1)[0], 0.01)
         self.almosteq(0.40, F.player_stack_to_scaled_scalar(round_state1, 2)[0], 0.01)
+
+    def test_player_stack_to_binary_array(self):
+        expected1 = [1, 1, 0, 1, 0, 0, 0, 0, 1, 0]  # bin(267) => 100000100
+        expected2 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        expected3 = [0, 0, 0, 0, 1, 0, 0, 1, 1, 0]
+        self.eq(expected1, F.player_stack_to_binary_array(round_state1, 0))
+        self.eq(expected2, F.player_stack_to_binary_array(round_state1, 1))
+        self.eq(expected3, F.player_stack_to_binary_array(round_state1, 2))
 
     def test_player_state_to_scaled_scalar(self):
         self.eq(1, F.player_state_to_scaled_scalar(round_state1, 0)[0])
@@ -153,6 +168,12 @@ class FeaturesTest(BaseUnitTest):
         self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 0)[0])
         self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 1)[0])
         self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 2)[0])
+
+    def test_player_action_history_to_binary_array(self):
+        expected = [0, 1, 1, 1, 1, 0, 1, 0, 1, 0]
+        self.eq(expected, F.player_action_history_to_binary_array(round_state1, 0))
+        self.eq(expected, F.player_action_history_to_binary_array(round_state1, 1))
+        self.eq(expected, F.player_action_history_to_binary_array(round_state1, 2))
 
     def test_player_to_vector(self):
         f_stack = F.player_stack_to_scalar
@@ -182,6 +203,10 @@ class FeaturesTest(BaseUnitTest):
     def test_pot_to_scaled_scalar(self):
         self.almosteq(0.33, F.pot_to_scaled_scalar(round_state1)[0], 0.01)
 
+    def test_pot_to_binary_array(self):
+        expected = [1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
+        self.eq(expected, F.pot_to_binary_array(round_state1))
+
     def test_action_to_onehot(self):
         self.eq([1,0,0,0,0,0], F.action_to_onehot(T.gen_fold_action()))
         self.eq([0,1,0,0,0,0], F.action_to_onehot(T.gen_call_action(10)))
@@ -207,4 +232,28 @@ class FeaturesTest(BaseUnitTest):
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
         vec = F.construct_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(26, vec)
+
+    def test_construct_binary_onehot_features(self):
+        action = T.gen_fold_action()
+        blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
+        vec = F.construct_binary_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
+        self.size(98, vec)
+
+    def xtest_visualize_onehot_features_weight(self):
+        import numpy as np
+        title = F.onehot_features_title()
+        acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+        weights = [["%s_%s" % (act, t) for t in title] for act in acts]
+        np_w = np.array(weights).T
+        visualized = F.visualize_onehot_features_weight([np_w], debug=True)
+        self.stop()
+
+    def xtest_visualize_binary_onehot_features_weight(self):
+        import numpy as np
+        title = F.binary_onehot_features_title()
+        acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+        weights = [["%s_%s" % (act, t) for t in title] for act in acts]
+        np_w = np.array(weights).T
+        visualized = F.visualize_binary_onehot_features_weight([np_w], debug=True)
+        self.stop()
 

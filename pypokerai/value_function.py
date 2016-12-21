@@ -125,3 +125,23 @@ class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
     def generate_features_title(self):
         return F.onehot_features_title()
 
+class LinearModelBinaryOnehotFeaturesValueFunction(BasePokerActionValueFunction):
+
+    def build_model(self):
+        input_dim = 281
+        model = Sequential()
+        model.add(Dense(6, input_dim=input_dim))
+        model.compile(loss="mse",  optimizer="adam")
+        return model
+
+    def construct_poker_features(
+            self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
+        return F.construct_binary_onehot_features(
+                round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
+
+    def visualize_feature_weights(self):
+        return F.visualize_binary_onehot_features_weight(self.model.get_weights())
+
+    def generate_features_title(self):
+        return F.binary_onehot_features_title()
+

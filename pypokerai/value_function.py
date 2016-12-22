@@ -64,6 +64,9 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
     def visualize_feature_weights(self):
         raise NotImplementedError("[visualize_feature_weights] method is not implemented")
 
+    def generate_features_title(self):
+        raise NotImplementedError("[generate_features_title] method is not implemented")
+
     def save(self, save_dir_path):
         self.model.save_weights(os.path.join(save_dir_path, self.MODEL_WEIGHTS_FILE_PATH))
 
@@ -88,6 +91,9 @@ class LinearModelScalarFeaturesValueFunction(BasePokerActionValueFunction):
     def visualize_feature_weights(self):
         return F.visualize_scalar_features_weight(self.model.get_weights())
 
+    def generate_features_title(self):
+        return F.scaled_scalar_features_title()
+
 class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
@@ -104,6 +110,9 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
 
     def visualize_feature_weights(self):
         return F.visualize_scaled_scalar_features_weight(self.model.get_weights())
+
+    def generate_features_title(self):
+        return F.scaled_scalar_features_title()
 
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 

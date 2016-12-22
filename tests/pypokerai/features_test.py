@@ -242,6 +242,24 @@ class FeaturesTest(BaseUnitTest):
         vec = F.construct_binary_onehot_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(98, vec)
 
+    def xtest_visualize_scalar_features_weight(self):
+        import numpy as np
+        title = F.scalar_features_title()
+        acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+        weights = [["%s_%s" % (act, t) for t in title] for act in acts]
+        np_w = np.array(weights).T
+        visualized = F.visualize_scalar_features_weight([np_w], debug=True)
+        self.stop()
+
+    def xtest_visualize_scaled_scalar_features_weight(self):
+        import numpy as np
+        title = F.scalar_features_title()
+        acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
+        weights = [["%s_%s" % (act, t) for t in title] for act in acts]
+        np_w = np.array(weights).T
+        visualized = F.visualize_scaled_scalar_features_weight([np_w], debug=True)
+        self.stop()
+
     def xtest_visualize_onehot_features_weight(self):
         import numpy as np
         title = F.onehot_features_title()

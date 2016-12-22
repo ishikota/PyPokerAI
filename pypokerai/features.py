@@ -403,7 +403,7 @@ def action_to_onehot(action):
     return [1 if idx==i else 0 for i in range(len(actions))]
 
 def _small_number_to_binary_array(num):
-    if num >= 1: num = 0.999
+    num = max(0, min(0.999, num))
     significant = int(round(num*1000))
     return [int(b) for b in bin(significant)[2:].zfill(10)][::-1]
 

@@ -215,6 +215,9 @@ class FeaturesTest(BaseUnitTest):
         self.eq([0,0,0,0,1,0], F.action_to_onehot(T.gen_triple_raise_action(10)))
         self.eq([0,0,0,0,0,1], F.action_to_onehot(T.gen_max_raise_action(10)))
 
+    def test_binary_array_negative_value(self):
+        self.eq([0]*10, F._small_number_to_binary_array(-1))
+
     def test_construct_scalar_features(self):
         action = T.gen_fold_action()
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }

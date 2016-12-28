@@ -10,6 +10,7 @@ sys.path.append(root)
 sys.path.append(src_path)
 
 from datetime import datetime
+import pickle
 import time
 import re
 import random
@@ -35,28 +36,28 @@ tmp.setup()
 handicappers = tmp.handicappers
 
 load_paths = [
-        os.path.join(CHECKPOINT_PATH, "after_50000_iteration"),
         os.path.join(CHECKPOINT_PATH, "after_100000_iteration"),
-        os.path.join(CHECKPOINT_PATH, "after_150000_iteration"),
         os.path.join(CHECKPOINT_PATH, "after_200000_iteration"),
-        os.path.join(CHECKPOINT_PATH, "after_250000_iteration"),
         os.path.join(CHECKPOINT_PATH, "after_300000_iteration"),
-        os.path.join(CHECKPOINT_PATH, "after_350000_iteration"),
         os.path.join(CHECKPOINT_PATH, "after_400000_iteration"),
-        os.path.join(CHECKPOINT_PATH, "after_450000_iteration"),
         os.path.join(CHECKPOINT_PATH, "after_500000_iteration"),
+        os.path.join(CHECKPOINT_PATH, "after_600000_iteration"),
+        os.path.join(CHECKPOINT_PATH, "after_700000_iteration"),
+        os.path.join(CHECKPOINT_PATH, "after_800000_iteration"),
+        os.path.join(CHECKPOINT_PATH, "after_900000_iteration"),
+        os.path.join(CHECKPOINT_PATH, "after_1000000_iteration"),
         ]
 names = [
-        "after_50000_iteration",
         "after_100000_iteration",
-        "after_150000_iteration",
         "after_200000_iteration",
-        "after_250000_iteration",
         "after_300000_iteration",
-        "after_350000_iteration",
         "after_400000_iteration",
-        "after_450000_iteration",
-        "after_5000000_iteration",
+        "after_500000_iteration",
+        "after_600000_iteration",
+        "after_700000_iteration",
+        "after_800000_iteration",
+        "after_900000_iteration",
+        "after_1000000_iteration",
         ]
 
 value_funcs = []
@@ -86,8 +87,15 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "game_results")
 if not os.path.exists(OUTPUT_DIR):
     os.mkdir(OUTPUT_DIR)
 
-# generate graph from here
 time_stamp = datetime.now().strftime('%m%d_%H_%M_%S')
+
+# save round-robin result by pickle
+data_save_path = os.path.join(OUTPUT_DIR, "%d_round_%d_match_data_%s.pickle" % (MAX_ROUND, NB_MATCH, time_stamp))
+with open(data_save_path, "wb") as f:
+    pickle.dump(result_holder, f)
+print "result data is saved on [ %s ]" % data_save_path
+
+# generate graph from here
 num_matcher = re.compile("after_(\d+)_iteration")
 fetch_num = lambda fname: int(num_matcher.search(fname).groups()[0])
 X = range(1, NB_MATCH+1)

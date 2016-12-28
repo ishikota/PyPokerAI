@@ -12,6 +12,23 @@ MODEL_OUTPUT_ACTION_POSITION = [FOLD, CALL, MIN_RAISE, DOUBLE_RAISE, TRIPLE_RAIS
 def action_index(action):
     return MODEL_OUTPUT_ACTION_POSITION.index(action["name"])
 
+class RandomValueFunction(BaseApproxActionValueFunction):
+
+    def __init__(self, blind_structure=None, handicappers=None):
+        pass
+
+    def setup(self):
+        pass
+
+    def construct_features(self, state, action):
+        return state, action
+
+    def approx_predict_value(self, features):
+        return 0
+
+    def approx_backup(self, features, backup_target, alpha):
+        pass
+
 class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 
     MODEL_ARCHITECTURE_FILE_PATH = "model_architecture.json"

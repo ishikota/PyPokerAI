@@ -148,12 +148,14 @@ def construct_binary_onehot_features(
     pot = pot_to_binary_array(round_state)
     return round_count + dealer_btn + street + cards + seats + pot
 
-def visualize_binary_onehot_features_weight(weights, debug=True):
+def visualize_binary_onehot_features_weight(weights, debug=False):
     assert weights[0].shape == (281, 6)
     acts = ["FOLD", "CALL", "MIN_RAISE", "DOUBLE_RAISE", "TRIPLE_RAISE", "MAX_RAISE"]
     w_for_acts = weights[0].T
-    if not debug: w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
-    w_for_acts = w_for_acts.tolist()
+    if debug:
+        w_for_acts = w_for_acts.tolist()
+    else:
+         w_for_acts = [[round(e,4) for e in weight] for weight in w_for_acts]
     ls = []
     ls.append("round count")
     for act, w in zip(acts, w_for_acts): ls.append("  %s : %s" % (act, w[:27]))

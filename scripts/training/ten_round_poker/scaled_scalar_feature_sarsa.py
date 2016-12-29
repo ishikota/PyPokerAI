@@ -39,19 +39,19 @@ from kyoka.policy import EpsilonGreedyPolicy
 from kyoka.callback import LearningRecorder, ManualInterruption
 
 from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
-from pypokerai.value_function import LinearModelBinaryOnehotFeaturesValueFunction
+from pypokerai.value_function import LinearModelScaledScalarFeaturesValueFunction
 from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder,\
         EpisodeSampler, WeightsAnalyzer
 
 
-class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
+class ApproxActionValueFunction(SarsaApproxActionValueFunction):
 
     def __init__(self, handicappers=None):
-        super(MonteCarloApproxActionValueFunction, self).__init__()
+        super(SarsaApproxActionValueFunction, self).__init__()
         self._handicappers = handicappers
 
     def setup(self):
-        self.delegate = LinearModelBinaryOnehotFeaturesValueFunction(blind_structure, self._handicappers)
+        self.delegate = LinearModelScaledScalarFeaturesValueFunction(blind_structure, self._handicappers)
         self.delegate.setup()
 
     def construct_features(self, state, action):
@@ -74,7 +74,7 @@ class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
 
 # Setup directory to output learning results
 time_stamp = datetime.now().strftime('%m%d_%H_%M_%S')
-TRAINING_TITLE = "binary_feature_montecarlo_trash_%s" % time_stamp
+TRAINING_TITLE = "scaled_scalar_feature_sarsa_trash_%s" % time_stamp
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "results", TRAINING_TITLE)
 os.mkdir(OUTPUT_DIR)
 
@@ -109,11 +109,11 @@ TEST_LENGTH = 1000000
 
 # Setup algorithm
 value_func = ApproxActionValueFunction()
-task = TexasHoldemTask(final_round=5, scale_reward=True, lose_penalty=True)
+task = TexasHoldemTask(final_round=10, scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
 policy.set_eps_annealing(0.99, 0.1, int(TEST_LENGTH*0.8))
-algorithm = MonteCarlo()
+algorithm = Sarsa(gamma=0.99)
 algorithm.setup(task, policy, value_func)
 
 # load last training result

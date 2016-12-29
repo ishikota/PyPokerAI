@@ -112,7 +112,7 @@ value_func = ApproxActionValueFunction()
 task = TexasHoldemTask(final_round=3, scale_reward=True, lose_penalty=True)
 task.set_opponent_value_functions([value_func]*9)
 policy = EpsilonGreedyPolicy(eps=0.99)
-policy.set_eps_annealing(0.99, 0.1, TEST_LENGTH/10)
+policy.set_eps_annealing(0.99, 0.1, int(TEST_LENGTH*0.8))
 algorithm = MonteCarlo()
 algorithm.setup(task, policy, value_func)
 
@@ -140,7 +140,7 @@ def value_func_generator():
     f = ApproxActionValueFunction(value_func.delegate.handicappers)
     f.setup()
     return f
-reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator)
+reset_opponent_value_func = ResetOpponentValueFunction(save_dir_path, reset_interval, value_func_generator, reset_policy="random")
 callbacks.append(reset_opponent_value_func)
 
 score_output_path = os.path.join(OUTPUT_DIR, "initial_value_transition.csv")
@@ -157,5 +157,5 @@ weights_sample_interval = 50000
 weights_analyzer = WeightsAnalyzer(weights_sample_interval, weights_output_path)
 callbacks.append(weights_analyzer)
 
-run_insecure_method(algorithm.run_gpi, (TEST_LENGTH, callbacks))
+algorithm.run_gpi(TEST_LENGTH, callbacks)
 

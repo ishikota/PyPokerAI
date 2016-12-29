@@ -18,9 +18,10 @@ import matplotlib
 matplotlib.use("tkAgg")
 import matplotlib.pyplot as plt
 from pypokerai.utils import play_game
-from pypokerai.value_function import LinearModelOnehotFeaturesValueFunction
+from pypokerai.value_function import LinearModelBinaryOnehotFeaturesValueFunction, LinearModelScaledScalarFeaturesValueFunction
 from pypokerai.task import blind_structure
 
+VALUE_FUNC_CLASS = None
 MAX_ROUND = None
 NB_MATCH = 3000
 LATEST_DIR = "gpi_finished"
@@ -30,8 +31,11 @@ CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), "checkpoint")
 if not MAX_ROUND:
     raise Exception("You forget to set max round for n-round poker task.")
 
+if not VALUE_FUNC_CLASS:
+    raise Exception("You forget to set value function type")
+
 # generate handicappers
-tmp = LinearModelOnehotFeaturesValueFunction(blind_structure)
+tmp = VALUE_FUNC_CLASS(blind_structure)
 tmp.setup()
 handicappers = tmp.handicappers
 
@@ -62,7 +66,7 @@ names = [
 
 value_funcs = []
 for name, path in zip(names, load_paths):
-    f = LinearModelOnehotFeaturesValueFunction(blind_structure, handicappers)
+    f = VALUE_FUNC_CLASS(blind_structure, handicappers)
     f.setup()
     f.load(path)
     value_funcs.append(f)

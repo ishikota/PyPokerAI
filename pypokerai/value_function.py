@@ -29,6 +29,28 @@ class RandomValueFunction(BaseApproxActionValueFunction):
     def approx_backup(self, features, backup_target, alpha):
         pass
 
+class FoldValueFunction(BaseApproxActionValueFunction):
+
+    def __init__(self, blind_structure=None, handicappers=None):
+        pass
+
+    def setup(self):
+        pass
+
+    def construct_features(self, state, action):
+        return state, action
+
+    def approx_predict_value(self, features):
+        _state, action = features
+        if action["name"] == FOLD:
+            return 1
+        else:
+            return 0
+
+    def approx_backup(self, features, backup_target, alpha):
+        pass
+
+
 class BasePokerActionValueFunction(BaseApproxActionValueFunction):
 
     MODEL_ARCHITECTURE_FILE_PATH = "model_architecture.json"

@@ -102,6 +102,7 @@ class InitialStateValueRecorder(BaseCallback):
 
     def _predict_value_of_initial_state(self, task, value_function):
         state = task.generate_initial_state()
+        while task.is_terminal_state(state): state = task.generate_initial_state()
         action = choose_best_action(task, value_function, state)
         return value_function.predict_value(state, action)
 

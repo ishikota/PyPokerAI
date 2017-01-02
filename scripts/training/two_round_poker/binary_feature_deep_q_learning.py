@@ -75,14 +75,13 @@ class ApproxActionValueFunction(DeepQLearningApproxActionValueFunction):
         return valur_for_action
 
     def backup_on_minibatch(self, q_network, backup_minibatch):
-        minibatch = [
-                (self.delegate.construct_features(state, action), target)
-                for state, action, target in backup_minibatch]
-        minibatch = [(feature[0], feature[1], target) for feature, target in minibatch]
-        for X, action, target in minibatch:
-            Y = q_network.predict_on_batch(np.array([X]))
-            Y[0][action_index(action)] = target
-            loss = q_network.train_on_batch(np.array([X]), Y)
+        X = np.array([self.delegate.construct_features(state, action)[0]
+                for state, action, target in backup_minibatch])
+        Y_info = [(action, target) for _state, action, target in backup_minibatch]
+        Y = q_network.predict_on_batch(X)
+        assert len(Y) == len(Y_info)
+        for y, (action, target) in zip(Y, Y_info): y[action_index(action)] = target
+        loss = q_network.train_on_batch(X, Y)
 
     def save_networks(self, q_network, q_hat_network, save_dir_path):
         q_network.save_weights(os.path.join(save_dir_path, self.Q_NET_SAVE_NAME))

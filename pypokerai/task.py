@@ -93,6 +93,8 @@ class TexasHoldemTask(BaseTask):
         while not self._check_my_turn(state):
             action, amount = self._choose_opponent_action(state)
             state, _events = self.emulator.apply_action(state, action, amount)
+            if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
+                state, _events = self.emulator.start_new_round(state)
         return state if not self.is_terminal_state(state) else self.generate_initial_state()
 
     def is_terminal_state(self, state):

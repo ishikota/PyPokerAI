@@ -41,7 +41,7 @@ from kyoka.callback import LearningRecorder, ManualInterruption
 from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
 from pypokerai.value_function import LinearModelScaledScalarFeaturesValueFunction
 from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder,\
-        EpisodeSampler, WeightsAnalyzer
+        EpisodeSampler, WeightsAnalyzer, TrainingLossRecorder
 
 
 class ApproxActionValueFunction(MonteCarloApproxActionValueFunction):
@@ -146,6 +146,10 @@ callbacks.append(reset_opponent_value_func)
 score_output_path = os.path.join(OUTPUT_DIR, "initial_value_transition.csv")
 initial_value_scorer = InitialStateValueRecorder(score_output_path)
 callbacks.append(initial_value_scorer)
+
+loss_record_path = os.path.join(OUTPUT_DIR, "loss_history.csv")
+loss_recorder = TrainingLossRecorder(loss_record_path)
+callbacks.append(loss_recorder)
 
 episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 50000

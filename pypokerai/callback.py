@@ -117,7 +117,7 @@ class TrainingLossRecorder(BaseCallback):
 
     def after_update(self, iteration_count, task, value_function):
         last_training_loss = value_function.delegate.loss_history[-1]
-        self.log("Value of initial state is [ %s ]" % last_training_loss)
+        self.log("Training loss is [ %s ]" % last_training_loss)
 
     def after_gpi_finish(self, task, value_function):
         with open(self.record_file_path, "wb") as f:

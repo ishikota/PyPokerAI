@@ -106,6 +106,25 @@ class InitialStateValueRecorder(BaseCallback):
         action = choose_best_action(task, value_function, state)
         return value_function.predict_value(state, action)
 
+class TrainingLossRecorder(BaseCallback):
+
+    def __init__(self, record_file_path):
+        self.record_file_path = record_file_path
+
+    def before_gpi_start(self, task, value_function):
+        self.log("Record training loss")
+        value_function.delegate.loss_history  # validation for old code
+
+    def after_update(self, iteration_count, task, value_function):
+        last_training_loss = value_function.delegate.loss_history[-1]
+        self.log("Value of initial state is [ %s ]" % last_training_loss)
+
+    def after_gpi_finish(self, task, value_function):
+        with open(self.record_file_path, "wb") as f:
+            writer = csv.writer(f, lineterminator="\n")
+            writer.writerow(value_function.delegate.loss_history)
+        self.log("Loss history is saved on [ %s ]" % self.record_file_path)
+
 class EpisodeSampler(BaseCallback):
 
     def __init__(self, sample_interval, log_file_path, my_uuid, show_weights=False):

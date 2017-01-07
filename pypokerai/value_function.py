@@ -60,6 +60,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         self.blind_structure = blind_structure
         self.handicappers = handicappers
         self.prediction_cache = (None, None)  # (features, prediction)
+        self.loss_history = []
 
     def setup(self):
         self.model = self.build_model()
@@ -91,6 +92,7 @@ class BasePokerActionValueFunction(BaseApproxActionValueFunction):
         Y = self.model.predict_on_batch(np.array([X]))[0].tolist()
         Y[action_index(action)] = backup_target
         loss = self.model.train_on_batch(np.array([X]), np.array([Y]))
+        self.loss_history.append(loss)
         self.prediction_cache = (None, None)
 
     def build_model(self):

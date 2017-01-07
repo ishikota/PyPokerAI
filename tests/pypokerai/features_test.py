@@ -165,12 +165,12 @@ class FeaturesTest(BaseUnitTest):
         self.eq(35, F.player_action_history_to_scalar(round_state1, 2)[0])
 
     def test_player_action_history_to_scaled_scalar(self):
-        self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 0)[0])
-        self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 1)[0])
-        self.eq(0.35, F.player_action_history_to_scaled_scalar(round_state1, 2)[0])
+        self.almosteq(0.116, F.player_action_history_to_scaled_scalar(round_state1, 0)[0], 0.001)
+        self.almosteq(0.116, F.player_action_history_to_scaled_scalar(round_state1, 1)[0], 0.001)
+        self.almosteq(0.116, F.player_action_history_to_scaled_scalar(round_state1, 2)[0], 0.001)
 
     def test_player_action_history_to_binary_array(self):
-        expected = [0, 1, 1, 1, 1, 0, 1, 0, 1, 0]
+        expected = [1, 0, 1, 0, 1, 1, 1, 0, 0, 0]
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 0))
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 1))
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 2))
@@ -181,7 +181,7 @@ class FeaturesTest(BaseUnitTest):
         f_history = F.player_action_history_to_scaled_scalar
         vec = F.player_to_vector(round_state1, 0, f_stack, f_state, f_history)
         self.size(4, vec)
-        self.eq([80, 0, 1, 0.35], vec)
+        self.almosteq([80, 0, 1, 0.116], vec, 0.001)
 
     def test_seats_to_vector(self):
         f_stack = F.player_stack_to_scaled_scalar
@@ -191,11 +191,11 @@ class FeaturesTest(BaseUnitTest):
         vec2 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "xgbpujiwtcccyicvfqffgy")
         vec3 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "pnqfqsvgwkegkuwnzucvxw")
         self.size(9, vec1)
-        self.almosteq([0.26, 1, 0.35, 0, 1, 0.35, 0.4, 1, 0.35], vec1, 0.01)
+        self.almosteq([0.26, 1, 0.116, 0, 1, 0.116, 0.4, 1, 0.116], vec1, 0.01)
         self.size(9, vec2)
-        self.almosteq([0, 1, 0.35, 0.4, 1, 0.35, 0.26, 1, 0.35], vec2, 0.01)
+        self.almosteq([0, 1, 0.116, 0.4, 1, 0.116, 0.26, 1, 0.116], vec2, 0.01)
         self.size(9, vec3)
-        self.almosteq([0.4, 1, 0.35, 0.26, 1, 0.35, 0, 1, 0.35], vec3, 0.01)
+        self.almosteq([0.4, 1, 0.116, 0.26, 1, 0.116, 0, 1, 0.116], vec3, 0.01)
 
     def test_pot_to_scalar(self):
         self.eq(100, F.pot_to_scalar(round_state1)[0])

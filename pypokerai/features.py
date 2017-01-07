@@ -367,9 +367,12 @@ def player_action_history_to_scalar(round_state, seat_pos):
     return [pay_sum]
 
 def player_action_history_to_scaled_scalar(round_state, seat_pos):
+    player_num = len(round_state["seats"])
+    stack_sum = sum([player_stack_to_scalar(round_state, i)[0] for i in range(player_num)])
     pot_amount = pot_to_scalar(round_state)[0]
+    all_chip = stack_sum + pot_amount
     pay_amount = player_action_history_to_scalar(round_state, seat_pos)[0]
-    return [1.0 * pay_amount / pot_amount]
+    return [1.0 * pay_amount / all_chip]
 
 def player_action_history_to_binary_array(round_state, seat_pos):
     return _small_number_to_binary_array(

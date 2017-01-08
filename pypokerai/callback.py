@@ -229,3 +229,28 @@ class WeightsAnalyzer(BaseCallback):
             logs = header + "\n" + content + "\n\n\n"
             with open(self.log_fpath, "a") as f: f.write(logs)
 
+class FinishTimeCalculator(BaseCallback):
+
+    def __init__(self, nb_episode, calculation_interval, log_file_path=None):
+        assert nb_episode != 0
+        self.nb_episode = nb_episode
+        self.calculation_interval = calculation_interval
+        self.log_file_path = log_file_path
+
+    def before_gpi_start(self, task, value_function):
+        base_msg = "Log prediction of finish time%s every %d training iteration"
+        log_path_msg = " to [ %s ]" % self.log_file_path if self.log_file_path else ""
+        self.log(base_msg % (log_path_msg, self.calculation_interval))
+        self.start_time = time.time()
+
+    def after_update(self, iteration_count, task, value_function):
+        if iteration_count % self.calculation_interval == 0:
+            eps_time = time.time() - self.start_time
+            whole_time = eps_time / iteration_count * self.nb_episode
+            finish_time = self.start_time + whole_time
+            finish_time_str = time.asctime(time.localtime(finish_time))
+            msg = "Finish time prediction at %d iteration : %s" % (iteration_count, finish_time_str)
+            self.log(msg)
+            if self.log_file_path:
+                with open(self.log_file_path, "a") as f: f.write("%s\n" % msg)
+

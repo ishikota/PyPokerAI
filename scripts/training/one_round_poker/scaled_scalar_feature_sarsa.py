@@ -41,7 +41,7 @@ from kyoka.callback import LearningRecorder, ManualInterruption
 from pypokerai.task import TexasHoldemTask, blind_structure, my_uuid
 from pypokerai.value_function import LinearModelScaledScalarFeaturesValueFunction
 from pypokerai.callback import ResetOpponentValueFunction, InitialStateValueRecorder,\
-        EpisodeSampler, WeightsAnalyzer, TrainingLossRecorder
+        EpisodeSampler, WeightsAnalyzer, TrainingLossRecorder, FinishTimeCalculator
 
 
 class ApproxActionValueFunction(SarsaApproxActionValueFunction):
@@ -150,6 +150,11 @@ callbacks.append(initial_value_scorer)
 loss_record_path = os.path.join(OUTPUT_DIR, "loss_history.csv")
 loss_recorder = TrainingLossRecorder(loss_record_path)
 callbacks.append(loss_recorder)
+
+calculation_interval = 50000
+finish_time_log_path = os.path.join(OUTPUT_DIR, "finish_time.txt")
+finish_time_calculator = FinishTimeCalculator(TEST_LENGTH, calculation_interval, finish_time_log_path)
+callbacks.append(finish_time_calculator)
 
 episode_log_path = os.path.join(OUTPUT_DIR, "episode_log.txt")
 episode_sample_interval = 50000

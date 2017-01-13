@@ -155,6 +155,26 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
     def generate_features_title(self):
         return F.scaled_scalar_features_title()
 
+class MLPOneLayerScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
+
+    def __init__(self, nb_unit, blind_structure, handicappers=None):
+        assert isinstance(nb_unit, int)
+        super(MLPOneLayerScaledScalarFeaturesValueFunction, self).__init__(blind_structure, handicappers)
+        self.nb_unit = nb_unit
+
+    def build_model(self):
+        input_dim = 35
+        model = Sequential()
+        model.add(Dense(self.nb_unit, input_dim=input_dim))
+        model.add(Dense(6))
+        model.compile(loss="mse",  optimizer="adam")
+        return model
+
+    def construct_poker_features(
+            self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
+        return F.construct_scaled_scalar_features(
+                round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
+
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):

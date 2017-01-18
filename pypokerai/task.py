@@ -108,6 +108,7 @@ class TexasHoldemTask(BaseTask):
         p_act_record = { p.uuid:[] for p in clear_state["table"].seats.players }
         state, _events = self.emulator.start_new_round(clear_state)
         while not self._check_my_turn(state):
+            state[ACTION_RECORD_KEY] = p_act_record
             opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
             p_act_record[opponent_uuid].append(action_info)
             action, amount = action_info["action"], action_info["amount"]
@@ -155,6 +156,7 @@ class TexasHoldemTask(BaseTask):
         if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
             state, _events = self.emulator.start_new_round(state)
         while not self._check_my_turn(state) and not self.is_terminal_state(state):
+            state[ACTION_RECORD_KEY] = p_act_record
             opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
             p_act_record[opponent_uuid].append(action_info)
             action, amount = action_info["action"], action_info["amount"]

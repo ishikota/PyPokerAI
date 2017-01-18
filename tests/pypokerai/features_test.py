@@ -2,9 +2,10 @@ import pypokerai.features as F
 import pypokerai.task as T
 
 from nose.tools import raises
-from mock import patch
+from mock import patch, Mock
 from tests.base_unittest import BaseUnitTest
 from tests.sample_data import round_state1, round_state2
+from pypokerengine.engine.data_encoder import DataEncoder
 from pypokerengine.engine.poker_constants import PokerConstants as Const
 
 class FeaturesTest(BaseUnitTest):
@@ -175,6 +176,14 @@ class FeaturesTest(BaseUnitTest):
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 1))
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 2))
 
+    def test_player_action_record_to_ratio(self):
+        record1 = [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 75, 'name': 'min_raise'}]
+        expected1 = [0, 0.5, 0.5, 0, 0, 0]
+        record2 = [{'action': 'fold', 'amount': 0, 'name': 'fold'}, {'action': 'fold', 'amount': 0, 'name': 'fold'}]
+        expected2 = [1.0, 0, 0, 0, 0, 0]
+        self.eq(expected1, F.player_action_record_to_action_ratio(record1))
+        self.eq(expected2, F.player_action_record_to_action_ratio(record2))
+
     def test_player_to_vector(self):
         f_stack = F.player_stack_to_scalar
         f_state = F.player_state_to_onehot
@@ -182,6 +191,15 @@ class FeaturesTest(BaseUnitTest):
         vec = F.player_to_vector(round_state1, 0, f_stack, f_state, f_history)
         self.size(4, vec)
         self.almosteq([80, 0, 1, 0.116], vec, 0.001)
+
+    def test_player_to_vector_with_action_record(self):
+        f_stack = F.player_stack_to_scaled_scalar
+        f_state = F.player_state_to_scaled_scalar
+        f_history = F.player_action_history_to_scaled_scalar
+        record = {"zjwhieqjlowtoogemqrjjo": [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 10000, 'name': 'max_raise'}]}
+        vec = F.player_to_vector(round_state1, 0, f_stack, f_state, f_history, record)
+        self.size(9, vec)
+        self.almosteq([0.26, 1, 0.116, 0, 0.5, 0, 0, 0, 0.5], vec, 0.01)
 
     def test_seats_to_vector(self):
         f_stack = F.player_stack_to_scaled_scalar
@@ -196,6 +214,23 @@ class FeaturesTest(BaseUnitTest):
         self.almosteq([0, 1, 0.116, 0.4, 1, 0.116, 0.26, 1, 0.116], vec2, 0.01)
         self.size(9, vec3)
         self.almosteq([0.4, 1, 0.116, 0.26, 1, 0.116, 0, 1, 0.116], vec3, 0.01)
+
+    def test_seats_to_vector_with_action_record(self):
+        f_stack = F.player_stack_to_scaled_scalar
+        f_state = F.player_state_to_scaled_scalar
+        f_history = F.player_action_history_to_scaled_scalar
+        action_record = {
+            "zjwhieqjlowtoogemqrjjo": [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 10000, 'name': 'max_raise'}],
+            "xgbpujiwtcccyicvfqffgy": [{'action': 'raise', 'amount': 100, 'name': 'double_raise'}],
+            "pnqfqsvgwkegkuwnzucvxw": [{'action': 'raise', 'amount': 100, 'name': 'triple_raise'}],
+            }
+        vec1 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "zjwhieqjlowtoogemqrjjo", action_record)
+        self.size(27, vec1)
+        self.almosteq([
+            0.26, 1, 0.116, 0, 0.5, 0, 0, 0, 0.5,
+            0, 1, 0.116, 0, 0, 0, 1.0, 0, 0,
+            0.4, 1, 0.116, 0, 0, 0, 0, 1.0, 0,
+            ], vec1, 0.01)
 
     def test_pot_to_scalar(self):
         self.eq(100, F.pot_to_scalar(round_state1)[0])
@@ -229,6 +264,24 @@ class FeaturesTest(BaseUnitTest):
         blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
         vec = F.construct_scaled_scalar_features(round_state1, "zjwhieqjlowtoogemqrjjo", ["S2", "D4"], blind_structure, action, algorithm="simulation")
         self.size(14, vec)
+
+    def test_construct_scaled_scalar_features_with_action_record(self):
+        task = T.TexasHoldemTask(final_round=10, action_record=True)
+        def recommend_random_action(state, action):
+            return 1
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_random_action
+        task.set_opponent_value_functions([value_func]*9)
+        state = task.generate_initial_state()
+        round_state = DataEncoder.encode_round_state(state)
+        blind_structure = { 1: "dummy", 3: "dummy", 5: "dummy", 10: "dummy" }
+        act_call = task.generate_possible_actions(state)[1]
+        state = task.transit_state(state, act_call)
+        #state = task.transit_state(state, act_call)
+        #self.stop()
+        vec = F.construct_scaled_scalar_features_with_action_record(
+                state, round_state, T.my_uuid, ["S2", "D4"], blind_structure, "dummy_action", algorithm="simulation")
+        self.size(35+10*6, vec)
 
     def test_construct_onehot_features(self):
         action = T.gen_fold_action()

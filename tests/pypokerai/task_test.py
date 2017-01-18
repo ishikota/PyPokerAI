@@ -318,4 +318,70 @@ class TexasHoldemTaskTest(BaseUnitTest):
         check(241, 10000, 20000)
         check(251, 20000, 30000)
 
+    def test_generate_initial_state_with_play_history(self):
+        task = TexasHoldemTask(final_round=10, action_record=True)
+        def recommend_call(state, action):
+            if action["name"] == "call":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_call
+        task.set_opponent_value_functions([value_func]*9)
+        state = task.generate_initial_state()
+        h = state["players_action_record"]
+        self.eq(10, len(h))
+        uuids = [p.uuid for p in state["table"].seats.players]
+        self.eq([], [r["name"] for r in h[uuids[0]]])
+        self.eq([], [r["name"] for r in h[uuids[1]]])
+        self.eq([], [r["name"] for r in h[uuids[2]]])
+        self.eq(["call"], [r["name"] for r in h[uuids[3]]])
+        self.eq(["call"], [r["name"] for r in h[uuids[4]]])
+        self.eq(["call"], [r["name"] for r in h[uuids[5]]])
+        self.eq([], [r["name"] for r in h[uuids[6]]])
+        self.eq([], [r["name"] for r in h[uuids[7]]])
+        self.eq([], [r["name"] for r in h[uuids[8]]])
+        self.eq([], [r["name"] for r in h[uuids[9]]])
+
+    def test_transit_state_with_play_history(self):
+        task = TexasHoldemTask(final_round=10, action_record=True)
+        def recommend_fold(state, action):
+            if action["name"] == "fold":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_fold
+        task.set_opponent_value_functions([value_func]*9)
+        state = task.generate_initial_state()
+        act_call = self.task.generate_possible_actions(state)[1]
+        state = task.transit_state(state, act_call)
+        h = state["players_action_record"]
+        self.eq(10, len(h))
+        uuids = [p.uuid for p in state["table"].seats.players]
+        self.eq(["fold"], [r["name"] for r in h[uuids[0]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[1]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[2]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[3]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[4]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[5]]])
+        self.eq(["call"], [r["name"] for r in h[uuids[6]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[7]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[8]]])
+        self.eq(["fold"], [r["name"] for r in h[uuids[9]]])
+
+        act_raise = self.task.generate_possible_actions(state)[2]
+        state = task.transit_state(state, act_raise)
+        h = state["players_action_record"]
+        self.eq(10, len(h))
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[0]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[1]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[2]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[3]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[4]]])
+        self.eq(["fold", "fold", "fold"], [r["name"] for r in h[uuids[5]]])
+        self.eq(["call", "min_raise"], [r["name"] for r in h[uuids[6]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[7]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[8]]])
+        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[9]]])
 

@@ -64,11 +64,12 @@ pick_me = lambda state: [p for p in state["table"].seats.players if p.uuid == my
 
 class TexasHoldemTask(BaseTask):
 
-    def __init__(self, final_round=max_round, scale_reward=False, lose_penalty=False, shuffle_position=False):
+    def __init__(self, final_round=max_round, scale_reward=False, lose_penalty=False, shuffle_position=False, action_record=False):
         self.final_round = final_round
         self.scale_reward = scale_reward
         self.lose_penalty = lose_penalty
         self.shuffle_position = shuffle_position
+        self.action_record = action_record
         self.emulator = Emulator()
         self.emulator.set_game_rule(nb_player, final_round, sb_amount, ante)
         self.emulator.set_blind_structure(blind_structure)
@@ -87,6 +88,10 @@ class TexasHoldemTask(BaseTask):
             self.opponent_value_functions[uuid] = value_function
 
     def generate_initial_state(self):
+        return self.generate_initial_state_without_action_record() if not self.action_record\
+                else self.generate_initial_state_with_action_record()
+
+    def generate_initial_state_without_action_record(self):
         p_info = _get_shuffled_players_info() if self.shuffle_position else players_info
         clear_state = self.emulator.generate_initial_game_state(p_info)
         state, _events = self.emulator.start_new_round(clear_state)
@@ -95,6 +100,21 @@ class TexasHoldemTask(BaseTask):
             state, _events = self.emulator.apply_action(state, action, amount)
             if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
                 state, _events = self.emulator.start_new_round(state)
+        return state if not self.is_terminal_state(state) else self.generate_initial_state()
+
+    def generate_initial_state_with_action_record(self):
+        p_info = _get_shuffled_players_info() if self.shuffle_position else players_info
+        clear_state = self.emulator.generate_initial_game_state(p_info)
+        p_act_record = { p.uuid:[] for p in clear_state["table"].seats.players }
+        state, _events = self.emulator.start_new_round(clear_state)
+        while not self._check_my_turn(state):
+            opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
+            p_act_record[opponent_uuid].append(action_info)
+            action, amount = action_info["action"], action_info["amount"]
+            state, _events = self.emulator.apply_action(state, action, amount)
+            if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
+                state, _events = self.emulator.start_new_round(state)
+        state[ACTION_RECORD_KEY] = p_act_record
         return state if not self.is_terminal_state(state) else self.generate_initial_state()
 
     def is_terminal_state(self, state):
@@ -107,6 +127,10 @@ class TexasHoldemTask(BaseTask):
         return round_finished and (short_of_players or i_am_loser or is_final_round)
 
     def transit_state(self, state, action):
+        return self.transit_state_without_action_record(state, action) if not self.action_record\
+                else self.transit_state_with_action_record(state, action)
+
+    def transit_state_without_action_record(self, state, action):
         assert self._check_my_turn(state)
         assert not self.is_terminal_state(state)
         action, amount = action["action"], action["amount"]
@@ -120,16 +144,36 @@ class TexasHoldemTask(BaseTask):
                 state, _events = self.emulator.start_new_round(state)
         return state
 
+    def transit_state_with_action_record(self, state, action):
+        assert self._check_my_turn(state)
+        assert not self.is_terminal_state(state)
+        assert state.has_key(ACTION_RECORD_KEY)
+        p_act_record = _deepcopy_action_record(state)
+        p_act_record[my_uuid].append(action)
+        action, amount = action["action"], action["amount"]
+        state, _events = self.emulator.apply_action(state, action, amount)
+        if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
+            state, _events = self.emulator.start_new_round(state)
+        while not self._check_my_turn(state) and not self.is_terminal_state(state):
+            opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
+            p_act_record[opponent_uuid].append(action_info)
+            action, amount = action_info["action"], action_info["amount"]
+            state, _events = self.emulator.apply_action(state, action, amount)
+            if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
+                state, _events = self.emulator.start_new_round(state)
+        state[ACTION_RECORD_KEY] = p_act_record
+        return state
+
     def _check_my_turn(self, state):
         players = state["table"].seats.players
         return state["next_player"] != "not_found" and my_uuid == players[state["next_player"]].uuid
 
-    def _choose_opponent_action(self, state):
+    def _choose_opponent_action(self, state, detail_info=False):
         players = state["table"].seats.players
         opponent_uuid = players[state["next_player"]].uuid
         value_function = self.opponent_value_functions[opponent_uuid]
         action_info = choose_best_action(self, value_function, state)
-        return action_info["action"], action_info["amount"]
+        return (opponent_uuid, action_info) if detail_info else (action_info["action"], action_info["amount"])
 
     def generate_possible_actions(self, state):
         action_info = self.emulator.generate_possible_actions(state)
@@ -166,6 +210,13 @@ def _get_shuffled_players_info():
     for key, val in base_items: shuffled_dict[key] = val
     return shuffled_dict
 
+def _deepcopy_action_record(state):
+    original = state[ACTION_RECORD_KEY]
+    deepcopy = {}
+    for key in original:
+        deepcopy[key] = [{k:v for k,v in act_info.items()} for act_info in original[key]]
+    assert original == deepcopy
+    return deepcopy
 
 def gen_fold_action():
     return { "name": FOLD, "action": "fold", "amount": 0 }
@@ -192,4 +243,5 @@ MIN_RAISE = "min_raise"
 DOUBLE_RAISE = "double_raise"
 TRIPLE_RAISE = "triple_raise"
 MAX_RAISE = "max_raise"
+ACTION_RECORD_KEY = "players_action_record"
 

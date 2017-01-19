@@ -2,7 +2,7 @@ import os
 import pypokerai.features as F
 import numpy as np
 from keras.models import Sequential, model_from_json
-from keras.layers.core import Dense
+from keras.layers.core import Dense, Activation
 from kyoka.value_function import BaseApproxActionValueFunction
 from holecardhandicapper.model.neuralnet import Neuralnet
 from pypokerengine.engine.data_encoder import DataEncoder
@@ -180,6 +180,7 @@ class MLPOneLayerScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
         input_dim = 35
         model = Sequential()
         model.add(Dense(self.nb_unit, input_dim=input_dim))
+        model.add(Activation("relu"))
         model.add(Dense(6))
         model.compile(loss="mse",  optimizer="adam")
         return model
@@ -200,6 +201,7 @@ class MLPOneLayerActionRecordScaledScalarFeaturesValueFunction(BasePokerActionVa
         input_dim = 95
         model = Sequential()
         model.add(Dense(self.nb_unit, input_dim=input_dim))
+        model.add(Activation("relu"))
         model.add(Dense(6))
         model.compile(loss="mse",  optimizer="adam")
         return model

@@ -347,9 +347,7 @@ def player_to_vector(round_state, seat_pos, f_stack, f_state, f_history, action_
     return vec
 
 def player_action_record_to_action_ratio(player_act_record):
-    act_to_idx = { FOLD:0, CALL:1, MIN_RAISE:2, DOUBLE_RAISE:3, TRIPLE_RAISE:4, MAX_RAISE:5 }
-    act_counts = [0, 0, 0, 0, 0, 0]
-    for record in player_act_record: act_counts[act_to_idx[record["name"]]] += 1
+    act_counts = [len(amounts) for amounts in player_act_record]
     all_counts = sum(act_counts)
     return [1.0*count/all_counts if all_counts!=0 else 0 for count in act_counts]
 

@@ -158,7 +158,7 @@ class LinearModelScaledScalarFeaturesValueFunction(BasePokerActionValueFunction)
 class LinearModelScaledScalarFeaturesWithActionRecordValueFunction(BasePokerActionValueFunction):
 
     def build_model(self):
-        input_dim = 95
+        input_dim = 75
         model = Sequential()
         model.add(Dense(6, input_dim=input_dim))
         model.compile(loss="mse",  optimizer="adam")
@@ -198,7 +198,7 @@ class MLPOneLayerActionRecordScaledScalarFeaturesValueFunction(BasePokerActionVa
         self.nb_unit = nb_unit
 
     def build_model(self):
-        input_dim = 95
+        input_dim = 75
         model = Sequential()
         model.add(Dense(self.nb_unit, input_dim=input_dim))
         model.add(Activation("relu"))

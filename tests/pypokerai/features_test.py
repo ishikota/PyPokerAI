@@ -177,10 +177,10 @@ class FeaturesTest(BaseUnitTest):
         self.eq(expected, F.player_action_history_to_binary_array(round_state1, 2))
 
     def test_player_action_record_to_ratio(self):
-        record1 = [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 75, 'name': 'min_raise'}]
-        expected1 = [0, 0.5, 0.5, 0, 0, 0]
-        record2 = [{'action': 'fold', 'amount': 0, 'name': 'fold'}, {'action': 'fold', 'amount': 0, 'name': 'fold'}]
-        expected2 = [1.0, 0, 0, 0, 0, 0]
+        record1 = [[],[50],[75],[]]
+        expected1 = [0, 0.5, 0.5, 0]
+        record2 = [[0,0],[],[],[10000,100]]
+        expected2 = [0.5, 0, 0, 0.5]
         self.eq(expected1, F.player_action_record_to_action_ratio(record1))
         self.eq(expected2, F.player_action_record_to_action_ratio(record2))
 
@@ -196,10 +196,10 @@ class FeaturesTest(BaseUnitTest):
         f_stack = F.player_stack_to_scaled_scalar
         f_state = F.player_state_to_scaled_scalar
         f_history = F.player_action_history_to_scaled_scalar
-        record = {"zjwhieqjlowtoogemqrjjo": [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 10000, 'name': 'max_raise'}]}
+        record = {"zjwhieqjlowtoogemqrjjo": [[0], [50], [100], [10000, 10000]]}
         vec = F.player_to_vector(round_state1, 0, f_stack, f_state, f_history, record)
-        self.size(9, vec)
-        self.almosteq([0.26, 1, 0.116, 0, 0.5, 0, 0, 0, 0.5], vec, 0.01)
+        self.size(7, vec)
+        self.almosteq([0.26, 1, 0.116, 0.2, 0.2, 0.2, 0.4], vec, 0.01)
 
     def test_seats_to_vector(self):
         f_stack = F.player_stack_to_scaled_scalar
@@ -220,16 +220,16 @@ class FeaturesTest(BaseUnitTest):
         f_state = F.player_state_to_scaled_scalar
         f_history = F.player_action_history_to_scaled_scalar
         action_record = {
-            "zjwhieqjlowtoogemqrjjo": [{'action': 'call', 'amount': 50, 'name': 'call'}, {'action': 'raise', 'amount': 10000, 'name': 'max_raise'}],
-            "xgbpujiwtcccyicvfqffgy": [{'action': 'raise', 'amount': 100, 'name': 'double_raise'}],
-            "pnqfqsvgwkegkuwnzucvxw": [{'action': 'raise', 'amount': 100, 'name': 'triple_raise'}],
+            "zjwhieqjlowtoogemqrjjo": [[],[50],[100],[]],
+            "xgbpujiwtcccyicvfqffgy": [[],[],[100],[]],
+            "pnqfqsvgwkegkuwnzucvxw": [[0],[],[],[]]
             }
         vec1 = F.seats_to_vector(round_state1, f_stack, f_state, f_history, "zjwhieqjlowtoogemqrjjo", action_record)
-        self.size(27, vec1)
+        self.size(21, vec1)
         self.almosteq([
-            0.26, 1, 0.116, 0, 0.5, 0, 0, 0, 0.5,
-            0, 1, 0.116, 0, 0, 0, 1.0, 0, 0,
-            0.4, 1, 0.116, 0, 0, 0, 0, 1.0, 0,
+            0.26, 1, 0.116, 0, 0.5, 0.5, 0,
+            0, 1, 0.116, 0, 0, 1.0, 0,
+            0.4, 1, 0.116, 1.0, 0, 0, 0
             ], vec1, 0.01)
 
     def test_pot_to_scalar(self):
@@ -281,7 +281,7 @@ class FeaturesTest(BaseUnitTest):
         #self.stop()
         vec = F.construct_scaled_scalar_features_with_action_record(
                 state, round_state, T.my_uuid, ["S2", "D4"], blind_structure, "dummy_action", algorithm="simulation")
-        self.size(35+10*6, vec)
+        self.size(35+10*4, vec)
 
     def test_construct_onehot_features(self):
         action = T.gen_fold_action()

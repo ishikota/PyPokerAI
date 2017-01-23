@@ -332,18 +332,18 @@ class TexasHoldemTaskTest(BaseUnitTest):
         h = state["players_action_record"]
         self.eq(10, len(h))
         uuids = [p.uuid for p in state["table"].seats.players]
-        self.eq([], [r["name"] for r in h[uuids[0]]])
-        self.eq([], [r["name"] for r in h[uuids[1]]])
-        self.eq([], [r["name"] for r in h[uuids[2]]])
-        self.eq(["call"], [r["name"] for r in h[uuids[3]]])
-        self.eq(["call"], [r["name"] for r in h[uuids[4]]])
-        self.eq(["call"], [r["name"] for r in h[uuids[5]]])
-        self.eq([], [r["name"] for r in h[uuids[6]]])
-        self.eq([], [r["name"] for r in h[uuids[7]]])
-        self.eq([], [r["name"] for r in h[uuids[8]]])
-        self.eq([], [r["name"] for r in h[uuids[9]]])
+        self.eq([[],[],[],[]], h[uuids[0]])
+        self.eq([[],[],[],[]], h[uuids[1]])
+        self.eq([[],[],[],[]], h[uuids[2]])
+        self.eq([[],[50],[],[]], h[uuids[3]])
+        self.eq([[],[50],[],[]], h[uuids[4]])
+        self.eq([[],[50],[],[]], h[uuids[5]])
+        self.eq([[],[],[],[]], h[uuids[6]])
+        self.eq([[],[],[],[]], h[uuids[7]])
+        self.eq([[],[],[],[]], h[uuids[8]])
+        self.eq([[],[],[],[]], h[uuids[9]])
 
-    def test_transit_state_with_play_history(self):
+    def test_transit_state_with_play_history1(self):
         task = TexasHoldemTask(final_round=10, action_record=True)
         def recommend_fold(state, action):
             if action["name"] == "fold":
@@ -359,29 +359,72 @@ class TexasHoldemTaskTest(BaseUnitTest):
         h = state["players_action_record"]
         self.eq(10, len(h))
         uuids = [p.uuid for p in state["table"].seats.players]
-        self.eq(["fold"], [r["name"] for r in h[uuids[0]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[1]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[2]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[3]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[4]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[5]]])
-        self.eq(["call"], [r["name"] for r in h[uuids[6]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[7]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[8]]])
-        self.eq(["fold"], [r["name"] for r in h[uuids[9]]])
+        self.eq([[0],[],[],[]], h[uuids[0]])
+        self.eq([[0],[],[],[]], h[uuids[1]])
+        self.eq([[0],[],[],[]], h[uuids[2]])
+        self.eq([[0],[],[],[]], h[uuids[3]])
+        self.eq([[0, 0],[],[],[]], h[uuids[4]])
+        self.eq([[0, 0],[],[],[]], h[uuids[5]])
+        self.eq([[],[50],[],[]], h[uuids[6]])
+        self.eq([[0],[],[],[]], h[uuids[7]])
+        self.eq([[0],[],[],[]], h[uuids[8]])
+        self.eq([[0],[],[],[]], h[uuids[9]])
 
         act_raise = self.task.generate_possible_actions(state)[2]
         state = task.transit_state(state, act_raise)
         h = state["players_action_record"]
         self.eq(10, len(h))
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[0]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[1]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[2]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[3]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[4]]])
-        self.eq(["fold", "fold", "fold"], [r["name"] for r in h[uuids[5]]])
-        self.eq(["call", "min_raise"], [r["name"] for r in h[uuids[6]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[7]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[8]]])
-        self.eq(["fold", "fold"], [r["name"] for r in h[uuids[9]]])
+        self.eq([[0, 0],[],[],[]], h[uuids[0]])
+        self.eq([[0, 0],[],[],[]], h[uuids[1]])
+        self.eq([[0, 0],[],[],[]], h[uuids[2]])
+        self.eq([[0, 0],[],[],[]], h[uuids[3]])
+        self.eq([[0, 0],[],[],[]], h[uuids[4]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[5]])
+        self.eq([[],[50],[75],[]], h[uuids[6]])
+        self.eq([[0, 0],[],[],[]], h[uuids[7]])
+        self.eq([[0, 0],[],[],[]], h[uuids[8]])
+        self.eq([[0, 0],[],[],[]], h[uuids[9]])
+
+        act_allin = self.task.generate_possible_actions(state)[-1]
+        state = task.transit_state(state, act_allin)
+        h = state["players_action_record"]
+        self.eq(10, len(h))
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[0]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[1]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[2]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[3]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[4]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[5]])
+        self.eq([[],[50],[75],[10150]], h[uuids[6]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[7]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[8]])
+        self.eq([[0, 0, 0],[],[],[]], h[uuids[9]])
+
+    # Sometimes this test fails
+    def test_transit_state_with_play_history2(self):
+        task = TexasHoldemTask(final_round=10, action_record=True)
+        def recommend_call(state, action):
+            if action["name"] == "call":
+                return 1
+            else:
+                return 0
+        value_func = Mock()
+        value_func.predict_value.side_effect = recommend_call
+        task.set_opponent_value_functions([value_func]*9)
+        state = task.generate_initial_state()
+        act_allin = self.task.generate_possible_actions(state)[-1]
+        state = task.transit_state(state, act_allin)
+        h = state["players_action_record"]
+        self.eq(10, len(h))
+        uuids = [p.uuid for p in state["table"].seats.players]
+        self.eq([[],[],[],[10000]], h[uuids[0]])
+        self.eq([[],[],[],[10000]], h[uuids[1]])
+        self.eq([[],[],[],[10000]], h[uuids[2]])
+        self.eq([[],[50],[],[10000]], h[uuids[3]])
+        self.eq([[],[50],[],[10000]], h[uuids[4]])
+        self.eq([[],[50],[],[10000]], h[uuids[5]])
+        self.eq([[],[],[],[10000]], h[uuids[6]])
+        self.eq([[],[],[],[10000]], h[uuids[7]])
+        self.eq([[],[],[],[10000]], h[uuids[8]])
+        self.eq([[],[],[],[10000]], h[uuids[9]])
 

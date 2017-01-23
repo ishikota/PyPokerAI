@@ -105,12 +105,12 @@ class TexasHoldemTask(BaseTask):
     def generate_initial_state_with_action_record(self):
         p_info = _get_shuffled_players_info() if self.shuffle_position else players_info
         clear_state = self.emulator.generate_initial_game_state(p_info)
-        p_act_record = { p.uuid:[] for p in clear_state["table"].seats.players }
+        p_act_record = { p.uuid:[[],[],[],[]] for p in clear_state["table"].seats.players }
         state, _events = self.emulator.start_new_round(clear_state)
         while not self._check_my_turn(state):
             state[ACTION_RECORD_KEY] = p_act_record
             opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
-            p_act_record[opponent_uuid].append(action_info)
+            p_act_record = self._update_action_record(state, p_act_record, opponent_uuid, action_info)
             action, amount = action_info["action"], action_info["amount"]
             state, _events = self.emulator.apply_action(state, action, amount)
             if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
@@ -145,20 +145,21 @@ class TexasHoldemTask(BaseTask):
                 state, _events = self.emulator.start_new_round(state)
         return state
 
-    def transit_state_with_action_record(self, state, action):
+    def transit_state_with_action_record(self, state, action_info):
         assert self._check_my_turn(state)
         assert not self.is_terminal_state(state)
         assert state.has_key(ACTION_RECORD_KEY)
         p_act_record = _deepcopy_action_record(state)
-        p_act_record[my_uuid].append(action)
-        action, amount = action["action"], action["amount"]
+        p_act_record = self._update_action_record(state, p_act_record, my_uuid, action_info)
+        action, amount = action_info["action"], action_info["amount"]
         state, _events = self.emulator.apply_action(state, action, amount)
+        state[ACTION_RECORD_KEY] = p_act_record
         if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
             state, _events = self.emulator.start_new_round(state)
         while not self._check_my_turn(state) and not self.is_terminal_state(state):
             state[ACTION_RECORD_KEY] = p_act_record
             opponent_uuid, action_info = self._choose_opponent_action(state, detail_info=True)
-            p_act_record[opponent_uuid].append(action_info)
+            p_act_record = self._update_action_record(state, p_act_record, opponent_uuid, action_info)
             action, amount = action_info["action"], action_info["amount"]
             state, _events = self.emulator.apply_action(state, action, amount)
             if state["street"] == Const.Street.FINISHED and not self.is_terminal_state(state):
@@ -205,6 +206,21 @@ class TexasHoldemTask(BaseTask):
         else:
             return 0
 
+    def _update_action_record(self, state, action_record, uuid, action_info):
+        action, amount = action_info["action"], action_info["amount"]
+        if 'fold' == action: idx = 0
+        elif 'call' == action: idx = 1
+        elif 'raise' == action: idx = 2
+        else: raise Exception("unexpected action [ %s ] received" % action)
+
+        # allin check. the idx of allin is 3.
+        action_player = [player for player in state["table"].seats.players if player.uuid==uuid]
+        assert len(action_player) == 1
+        if amount >= action_player[0].stack and 'fold' != action: idx = 3
+        action_record[uuid][idx].append(amount)
+        return action_record
+
+
 def _get_shuffled_players_info():
     shuffled_dict = OrderedDict()
     base_items = players_info.items()
@@ -216,7 +232,7 @@ def _deepcopy_action_record(state):
     original = state[ACTION_RECORD_KEY]
     deepcopy = {}
     for key in original:
-        deepcopy[key] = [{k:v for k,v in act_info.items()} for act_info in original[key]]
+        deepcopy[key] = [e[::] for e in original[key]]
     assert original == deepcopy
     return deepcopy
 

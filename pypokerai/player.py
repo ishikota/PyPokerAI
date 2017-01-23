@@ -31,16 +31,31 @@ class PokerPlayer(BasePokerPlayer):
         return action["action"], action["amount"]
 
     def receive_game_start_message(self, game_info):
-        pass
+        self.players_action_record = {
+                player_info["uuid"]: [[],[],[],[]] for player_info in game_info["seats"]
+                }
 
     def receive_round_start_message(self, round_count, hole_card, seats):
-        pass
+        self.round_count = round_count
+        self.hole_card = hole_card
 
     def receive_street_start_message(self, street, round_state):
-        pass
+        self.street = street
 
     def receive_game_update_message(self, action, round_state):
-        pass
+        uuid, action, amount = action["player_uuid"], action["action"], action["amount"]
+        idx = 100
+        if 'fold' == action: idx = 0
+        elif 'call' == action: idx = 1
+        elif 'raise' == action: idx = 2
+        else: raise Exception("unexpected action [ %s ] received" % action)
+
+        # allin check. the idx of allin is 3.
+        action_player = [player for player in round_state["seats"] if player["uuid"]==uuid]
+        assert len(action_player) == 1
+        if 'allin' == action_player[0]["state"] and 'fold' != action: idx = 3
+        self.players_action_record[uuid][idx].append(amount)
+
 
     def receive_round_result_message(self, winners, hand_info, round_state):
         pass

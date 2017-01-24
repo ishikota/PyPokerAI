@@ -13,19 +13,22 @@ from kyoka.algorithm.rl_algorithm import generate_episode
 from kyoka.algorithm.montecarlo import MonteCarloApproxActionValueFunction
 from kyoka.policy import GreedyPolicy
 from pypokerai.task import TexasHoldemTask, blind_structure
-from pypokerai.value_function import LinearModelBinaryOnehotFeaturesValueFunction, LinearModelScaledScalarFeaturesValueFunction
+from pypokerai.value_function import MLPOneLayerScaledScalarFeaturesValueFunction, MLPOneLayerActionRecordScaledScalarFeaturesValueFunction
 from pypokerai.callback import EpisodeSampler
 
 # CONST
 VALUE_FUNC_CLASS = None
 POKER_ROUND = None
+NB_UNIT = None
 if not POKER_ROUND:
     raise Exception("You forget to set max round for n-round poker task.")
 if not VALUE_FUNC_CLASS:
     raise Exception("You forget to set value function type")
+if not NB_UNIT:
+    raise Exception("You forget to set number of unit in hidden layer")
 
 # generate handicappers
-tmp = VALUE_FUNC_CLASS(blind_structure)
+tmp = VALUE_FUNC_CLASS(NB_UNIT, blind_structure)
 tmp.setup()
 handicappers = tmp.handicappers
 
@@ -52,7 +55,7 @@ class ValueFuncWrapper(MonteCarloApproxActionValueFunction):
         self._handicappers = handicappers
 
     def setup(self):
-        self.delegate = VALUE_FUNC_CLASS(blind_structure, self._handicappers)
+        self.delegate = VALUE_FUNC_CLASS(NB_UNIT, blind_structure, self._handicappers)
         self.delegate.setup()
 
     def construct_features(self, state, action):
@@ -80,7 +83,7 @@ agent_value_func.load(agent_func_load_path)
 
 opponent_value_funcs = []
 for path in opponent_func_load_paths:
-    value_func = VALUE_FUNC_CLASS(blind_structure, handicappers)
+    value_func = VALUE_FUNC_CLASS(NB_UNIT, blind_structure, handicappers)
     value_func.setup()
     value_func.load(path)
     opponent_value_funcs.append(value_func)

@@ -14,16 +14,15 @@ import pickle
 import time
 import re
 import random
-import matplotlib
-matplotlib.use("tkAgg")
-import matplotlib.pyplot as plt
+#import matplotlib
+#matplotlib.use("tkAgg")
+#import matplotlib.pyplot as plt
 from pypokerai.utils import play_game
 from pypokerai.value_function import MLPOneLayerScaledScalarFeaturesValueFunction, MLPOneLayerActionRecordScaledScalarFeaturesValueFunction
 from pypokerai.task import blind_structure
 
 VALUE_FUNC_CLASS = None
 MAX_ROUND = None
-NB_UNIT = None
 NB_MATCH = 3000
 LATEST_DIR = "gpi_finished"
 CHECKPOINT_PATH = os.path.join(os.path.dirname(__file__), "checkpoint")
@@ -35,12 +34,8 @@ if not MAX_ROUND:
 if not VALUE_FUNC_CLASS:
     raise Exception("You forget to set value function type")
 
-if not NB_UNIT:
-    raise Exception("You forget to set number of hidden unit")
-
-
 # generate handicappers
-tmp = VALUE_FUNC_CLASS(NB_UNIT, blind_structure)
+tmp = VALUE_FUNC_CLASS(blind_structure)
 tmp.setup()
 handicappers = tmp.handicappers
 
@@ -71,7 +66,7 @@ names = [
 
 value_funcs = []
 for name, path in zip(names, load_paths):
-    f = VALUE_FUNC_CLASS(NB_UNIT, blind_structure, handicappers)
+    f = VALUE_FUNC_CLASS(blind_structure, handicappers)
     f.setup()
     f.load(path)
     value_funcs.append(f)
@@ -104,6 +99,7 @@ with open(data_save_path, "wb") as f:
     pickle.dump(result_holder, f)
 print "result data is saved on [ %s ]" % data_save_path
 
+"""
 # generate graph from here
 num_matcher = re.compile("after_(\d+)_iteration")
 fetch_num = lambda fname: int(num_matcher.search(fname).groups()[0])
@@ -141,4 +137,4 @@ fig.tight_layout()
 plt.savefig(hist_save_path)
 plt.rcParams["font.size"] = original_font_size
 print "histgram saved on [ %s ]" % hist_save_path
-
+"""

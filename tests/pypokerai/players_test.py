@@ -1,4 +1,5 @@
 from tests.base_unittest import BaseUnitTest
+from mock import Mock
 
 from pypokerai.task import TexasHoldemTask, blind_structure
 from pypokerai.player import PokerPlayer
@@ -8,10 +9,10 @@ class PlayersTest(BaseUnitTest):
 
     def setUp(self):
         self.task = TexasHoldemTask()
-        self.player = PokerPlayer(
-                self.task,
-                LinearModelScaledScalarFeaturesWithActionRecordValueFunction(blind_structure)
-                )
+        value_func = Mock()
+        value_func.predict_value.side_effect = lambda state, action: 1 if action["action"]=="call" else 0
+        value_func.setup()
+        self.player = PokerPlayer(self.task, value_func, debug=False)
 
     def test_receive_game_start_message(self):
         self.player.receive_game_start_message(game_info)
@@ -55,9 +56,17 @@ class PlayersTest(BaseUnitTest):
         self.eq([[0],[],[15],[]], self.player.players_action_record["bwivgajwiewdkpymuztbxq"])
         self.eq([[],[],[],[90]], self.player.players_action_record["pdvfqlaedvtdxezzhqzmdb"])
 
-    def xtest_declare_action_test(self):
-        pass # TODO check if action_record is attached on restored state
-
+    def test_declare_action_test(self):
+        valid_actions = "dummy"
+        hole_card = ['H8', 'H7']
+        round_state = round_state_call
+        self.player.receive_game_start_message(game_info)
+        self.player.receive_round_start_message(1, ['H8', 'H7'], "dummy")
+        self.player.set_uuid("vzrsrzvmyzaipkcenzdqwp")
+        action, amount = self.player.declare_action(valid_actions, hole_card, round_state)
+        assert "call" == action and 10 == amount
+        act_record = self.player.value_func.predict_value.call_args_list[0][0][0]["players_action_record"]
+        self.eq([10], act_record[self.player.uuid][1])
 
 game_info = {
         'player_num': 3,

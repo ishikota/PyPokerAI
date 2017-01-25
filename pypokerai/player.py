@@ -4,6 +4,7 @@ from pypokerengine.utils.card_utils import gen_cards
 import pypokerengine.utils.visualize_utils as U
 from kyoka.policy import choose_best_action
 from pypokerai.features import cards_to_scaled_scalar
+from pypokerai.task import ACTION_RECORD_KEY
 
 class PokerPlayer(BasePokerPlayer):
 
@@ -14,7 +15,9 @@ class PokerPlayer(BasePokerPlayer):
 
     def declare_action(self, valid_actions, hole_card, round_state):
         game_state = restore_state(hole_card, round_state)
+        game_state[ACTION_RECORD_KEY] = self.players_action_record
         action = choose_best_action(self.task, self.value_func, game_state)
+        self._update_action_record(self.uuid, action["action"], action["amount"], round_state)
         if self.debug_mode:
             win_rate = cards_to_scaled_scalar(
                     round_state, hole_card, "neuralnet",
@@ -44,6 +47,9 @@ class PokerPlayer(BasePokerPlayer):
 
     def receive_game_update_message(self, action, round_state):
         uuid, action, amount = action["player_uuid"], action["action"], action["amount"]
+        self._update_action_record(uuid, action, amount, round_state)
+
+    def _update_action_record(self, uuid, action, amount, round_state):
         idx = 100
         if 'fold' == action: idx = 0
         elif 'call' == action: idx = 1

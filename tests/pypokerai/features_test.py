@@ -181,8 +181,16 @@ class FeaturesTest(BaseUnitTest):
         expected1 = [0, 0.5, 0.5, 0]
         record2 = [[0,0],[],[],[10000,100]]
         expected2 = [0.5, 0, 0, 0.5]
-        self.eq(expected1, F.player_action_record_to_action_ratio(record1))
-        self.eq(expected2, F.player_action_record_to_action_ratio(record2))
+        self.eq(expected1, F.player_action_record_to_action_ratio(record1, 0))
+        self.eq(expected2, F.player_action_record_to_action_ratio(record2, 0))
+
+    def test_player_action_record_to_ratio(self):
+        record1 = [[],[50],[75],[]]
+        expected1 = [0, 0.1, 0.1, 0]
+        record2 = [[0,0],[],[],[10000,100]]
+        expected2 = [0.2, 0, 0, 0.2]
+        self.eq(expected1, F.player_action_record_to_action_ratio(record1, 10))
+        self.eq(expected2, F.player_action_record_to_action_ratio(record2, 10))
 
     def test_player_to_vector(self):
         f_stack = F.player_stack_to_scalar

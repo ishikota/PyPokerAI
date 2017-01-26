@@ -87,7 +87,7 @@ def construct_scaled_scalar_features_with_action_record(
     dealer_btn = dealer_btn_to_scaled_scalar(round_state, my_uuid)
     street = street_to_scaled_scalar(round_state)
     cards = cards_to_scaled_scalar(round_state, hole_card, algorithm, neuralnets=neuralnets)
-    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid, action_record=state[ACTION_RECORD_KEY])
+    seats = seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid, action_record=state[ACTION_RECORD_KEY], action_record_logic_threthold=10)
     pot = pot_to_scaled_scalar(round_state)
     return round_count + dealer_btn + street + cards + seats + pot
 
@@ -325,16 +325,19 @@ def cards_to_binary_array(round_state, hole_card, algorithm, simulation_num=100,
             cards_to_scaled_scalar(round_state, hole_card, algorithm, simulation_num, neuralnets)[0]
             )
 
-def seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid, action_record=None):
+def seats_to_vector(round_state, f_stack, f_state, f_history, my_uuid, action_record=None,
+        action_record_logic_threthold=0):
     my_pos = [p["uuid"] for p in round_state["seats"]].index(my_uuid)
     player_num = len(round_state["seats"])
     relative_pos = range(player_num) + range(player_num)
     relative_pos = relative_pos[my_pos:my_pos+player_num]
-    c_p2vec = lambda pos: player_to_vector(round_state, pos, f_stack, f_state, f_history, action_record)
+    c_p2vec = lambda pos: player_to_vector(
+            round_state, pos, f_stack, f_state, f_history, action_record, action_record_logic_threthold)
     player_vecs = [c_p2vec(pos) for pos in relative_pos]
     return reduce(lambda acc, e: acc+e, player_vecs, [])
 
-def player_to_vector(round_state, seat_pos, f_stack, f_state, f_history, action_record=None):
+def player_to_vector(round_state, seat_pos, f_stack, f_state, f_history, action_record=None,
+        action_record_logic_threthold=0):
     my_info = round_state["seats"][seat_pos]
     stack = f_stack(round_state, seat_pos)
     state = f_state(round_state, seat_pos)
@@ -342,14 +345,17 @@ def player_to_vector(round_state, seat_pos, f_stack, f_state, f_history, action_
     vec = stack + state + history
     if action_record:
         my_act_record = action_record[my_info["uuid"]]
-        record_vec = player_action_record_to_action_ratio(my_act_record)
+        record_vec = player_action_record_to_action_ratio(my_act_record, action_record_logic_threthold)
         vec += record_vec
     return vec
 
-def player_action_record_to_action_ratio(player_act_record):
+def player_action_record_to_action_ratio(player_act_record, logic_threthold):
     act_counts = [len(amounts) for amounts in player_act_record]
     all_counts = sum(act_counts)
-    return [1.0*count/all_counts if all_counts!=0 else 0 for count in act_counts]
+    if all_counts >= logic_threthold:
+        return [1.0*count/all_counts if all_counts!=0 else 0 for count in act_counts]
+    else:
+        return [0.1*count for count in act_counts]
 
 def player_stack_to_scalar(round_state, seat_pos):
     my_info = round_state["seats"][seat_pos]

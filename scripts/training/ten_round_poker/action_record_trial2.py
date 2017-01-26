@@ -89,7 +89,7 @@ shutil.copyfile(initial_value_plot_script_path, initial_value_plot_script_output
 
 # copy initial value plot script to output dir
 loss_plot_script_path = os.path.join(root, "scripts", "plot_loss_history.py")
-loss_plot_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(initial_value_plot_script_path))
+loss_plot_script_output_path = os.path.join(OUTPUT_DIR, os.path.basename(loss_plot_script_path))
 shutil.copyfile(loss_plot_script_path, loss_plot_script_output_path)
 
 # copy episode generator script to output dir

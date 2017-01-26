@@ -63,8 +63,9 @@ keys = sorted(result_holder.keys(), key=fetch_num)
 fig = plt.figure()
 for i, key in enumerate(keys):
     vals = result_holder[key]
+    median = sorted(vals)[len(vals)/2]
     ax = fig.add_subplot(5, 2, i+1)
-    ax.title.set_text(key)
+    ax.title.set_text("%s (median=%d)" % (key, median))
     ax.hist(vals, bins=30)
 fig.tight_layout()
 plt.savefig(hist_save_path)

@@ -2,7 +2,7 @@ import os
 import pypokerai.features as F
 import numpy as np
 from keras.models import Sequential, model_from_json
-from keras.layers.core import Dense, Activation
+from keras.layers.core import Dense, Activation, Dropout
 from kyoka.value_function import BaseApproxActionValueFunction
 from holecardhandicapper.model.neuralnet import Neuralnet
 from pypokerengine.engine.data_encoder import DataEncoder
@@ -210,6 +210,48 @@ class MLPOneLayerActionRecordScaledScalarFeaturesValueFunction(BasePokerActionVa
             self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
         return F.construct_scaled_scalar_features_with_action_record(
                 state, round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
+
+class MLPTwoLayerScaledScalarFeaturesValueFunction(BasePokerActionValueFunction):
+
+    def build_model(self):
+        input_dim = 75
+        model = Sequential()
+        model.add(Dense(128, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(64, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(6))
+        model.compile(loss="mse",  optimizer="adam")
+        return model
+
+    def construct_poker_features(
+            self, state, action, round_state, my_uuid, hole_str, handicappers, blind_structure):
+        return F.construct_scaled_scalar_features_with_action_record(
+                state, round_state, my_uuid, hole_str, blind_structure, neuralnets=handicappers)
+
+class MLPFiveLayerScaledScalarFeaturesValueFunction(MLPTwoLayerScaledScalarFeaturesValueFunction):
+
+    def build_model(self):
+        input_dim = 75
+        model = Sequential()
+        model.add(Dense(128, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(128, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(64, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dropout(0.5))
+        model.add(Dense(64, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dense(32, input_dim=input_dim))
+        model.add(Activation("relu"))
+        model.add(Dense(6))
+        model.compile(loss="mse",  optimizer="adam")
+        return model
 
 class LinearModelOnehotFeaturesValueFunction(BasePokerActionValueFunction):
 

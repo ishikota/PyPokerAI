@@ -18,7 +18,8 @@ import random
 #matplotlib.use("tkAgg")
 #import matplotlib.pyplot as plt
 from pypokerai.utils import play_game
-from pypokerai.value_function import MLPOneLayerScaledScalarFeaturesValueFunction, MLPOneLayerActionRecordScaledScalarFeaturesValueFunction
+from pypokerai.value_function import MLPTwoLayerScaledScalarFeaturesValueFunction,\
+        MLPFiveLayerScaledScalarFeaturesValueFunction
 from pypokerai.task import blind_structure
 
 VALUE_FUNC_CLASS = None
